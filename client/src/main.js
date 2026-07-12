@@ -60,7 +60,7 @@ function updateFloodLayer() {
     map.addLayer(
       { id: "flood", type: "raster", source: "flood",
         paint: { "raster-opacity": Number($("#p-opacity").value) } },
-      "salt-segments" in (map.style?._layers || {}) ? "salt-segments" : undefined,
+      map.getLayer("salt-segments") ? "salt-segments" : undefined,
     );
   }
   map.setLayoutProperty("flood", "visibility",
