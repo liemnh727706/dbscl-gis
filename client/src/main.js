@@ -36,6 +36,7 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }));
+window._map = map; // debug console
 
 // ===================== Lop raster ngap (TiTiler) =====================
 function floodTileUrl(t) {

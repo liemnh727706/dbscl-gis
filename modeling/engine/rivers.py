@@ -1,9 +1,13 @@
-"""Mang luoi song chinh DBSCL - polyline don gian hoa, toa do WGS84.
+"""Mang luoi song chinh DBSCL - polyline WGS84.
 
 Moi song: danh sach diem tu CUA SONG (bien) nguoc len THUONG NGUON.
-Toa do gan dung, du dung cho mo phong; co the thay bang du lieu OSM
-(xem scripts/fetch_rivers_osm.py).
+Toa do khai bao duoi day chi la duong tho (gan dung); neu ton tai file
+rivers_osm.json (sinh boi scripts/fetch_rivers_osm.py tu du lieu
+OpenStreetMap) thi diem cua tung song duoc THAY BANG duong tam song that
+de khop voi vi tri long song tren ban do.
 """
+import json as _json
+import os as _os
 
 # (lon, lat) tu cua song nguoc len thuong nguon
 RIVERS = {
@@ -80,6 +84,16 @@ RIVERS = {
         ],
     },
 }
+
+# Neo polyline vao long song that tu OSM (neu da fetch)
+_OSM_FILE = _os.path.join(_os.path.dirname(__file__), "rivers_osm.json")
+if _os.path.exists(_OSM_FILE):
+    with open(_OSM_FILE, encoding="utf-8") as _f:
+        _osm = _json.load(_f)
+    for _key, _data in _osm.items():
+        if _key in RIVERS and len(_data.get("points", [])) >= 5:
+            RIVERS[_key]["points"] = [tuple(_p) for _p in _data["points"]]
+            RIVERS[_key]["geometry_source"] = _data.get("source", "osm")
 
 # Duong bo bien don gian hoa (Bien Tay -> mui Ca Mau -> Bien Dong -> Go Cong)
 COASTLINE = [

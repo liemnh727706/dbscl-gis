@@ -108,5 +108,9 @@ docker compose up -d --build
   do mưa ở vùng trũng. Nhanh (~giây/bước) nên chạy realtime được.
 - **Mặn 1D**: `S(x) = 30·exp(−x/L)`, L phụ thuộc Q, SLR, triều — hiệu chỉnh theo
   ranh mặn 4 g/l điển hình mùa khô (45–60 km, tương tự đợt hạn mặn 2016/2020).
+- **Hình học sông**: đường tâm 8 nhánh sông chính lấy từ **OpenStreetMap**
+  (file `modeling/engine/rivers_osm.json`, sinh bằng
+  `modeling/scripts/fetch_rivers_osm.py` — chạy lại khi muốn cập nhật), nên
+  lớp mặn hiển thị trùng khớp với lòng sông trên bản đồ.
 - Mô hình đơn giản hóa phục vụ **mô phỏng/giáo dục/cảnh báo sơ bộ**, không thay
   thế bản tin dự báo chính thức của cơ quan KTTV.

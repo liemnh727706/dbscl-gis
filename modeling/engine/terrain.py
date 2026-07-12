@@ -22,7 +22,7 @@ BBOX = (104.4, 8.4, 107.0, 11.3)   # lon_min, lat_min, lon_max, lat_max
 RES = 0.0025                        # ~275 m/cell
 KM_PER_DEG_LAT = 111.32
 
-CACHE_VERSION = 7
+CACHE_VERSION = 8  # doi khi hinh hoc song/DEM tong hop thay doi
 
 
 class Terrain:
