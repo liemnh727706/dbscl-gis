@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  # Node.js API backend - realtime data + orchestration + alerts
+  server:
+    build: ./server
+    environment:
+      - PORT=3000
+      - MODEL_API_URL=http://modeling:8000
+      - CACHE_TTL_SECONDS=600
+    depends_on:
+      - modeling
+    restart: unless-stopped
+
+  # Python modeling service - HAND-FIM flood + salinity intrusion
+  modeling:
+    build: ./modeling
+    volumes:
+      - ./data:/data
+    environment:
+      - DATA_DIR=/data
+    restart: unless-stopped
+
+  # TiTiler - dynamic raster tiles from COG time-series
+  titiler:
+    image: ghcr.io/developmentseed/titiler:latest
+    environment:
+      - TITILER_API_CORS_ORIGINS=*
+      - GDAL_CACHEMAX=200
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+    volumes:
+      - ./data:/data:ro
+    restart: unless-stopped
+
+  # Frontend - MapLibre GL JS, served by nginx which also proxies api/tiles
+  client:
+    build: ./client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+      - titiler
+    restart: unless-stopped

@@ -1,0 +1,15 @@
+{
+  "name": "mekong-flood-server",
+  "version": "1.0.0",
+  "description": "API backend - mo phong ngap lut & xam nhap man DBSCL",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mô phỏng ngập lụt & xâm nhập mặn ĐBSCL</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <h1>🌊 Mô phỏng ngập lụt &amp; xâm nhập mặn<br /><span>Đồng bằng sông Cửu Long</span></h1>
+
+      <section class="panel">
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="realtime">⏱ Thời gian thực</button>
+          <button class="mode-tab" data-mode="custom">🎛 Tùy chỉnh</button>
+          <button class="mode-tab" data-mode="scenario">📁 Kịch bản</button>
+        </div>
+
+        <div id="realtime-info" class="mode-body">
+          <div id="rt-summary" class="muted">Đang tải dữ liệu thời gian thực…</div>
+        </div>
+
+        <div id="custom-controls" class="mode-body hidden">
+          <label>Dòng chảy thượng nguồn (Q)
+            <input type="range" id="p-q" min="0.2" max="5" step="0.1" value="1" />
+            <output>1.0×</output></label>
+          <label>Biên độ triều (m)
+            <input type="range" id="p-tide" min="0" max="3" step="0.1" value="1.4" />
+            <output>1.4 m</output></label>
+          <label>Triều cường / nước dâng (m)
+            <input type="range" id="p-surge" min="0" max="2" step="0.1" value="0" />
+            <output>0.0 m</output></label>
+          <label>Nước biển dâng - SLR (m)
+            <input type="range" id="p-slr" min="0" max="1" step="0.05" value="0" />
+            <output>0.00 m</output></label>
+          <label>Lượng mưa (mm/ngày)
+            <input type="range" id="p-rain" min="0" max="300" step="10" value="0" />
+            <output>0 mm</output></label>
+          <label>Thời gian mô phỏng (giờ)
+            <input type="range" id="p-hours" min="12" max="72" step="12" value="24" />
+            <output>24 h</output></label>
+        </div>
+
+        <div id="scenario-controls" class="mode-body hidden">
+          <select id="scenario-select"><option>Đang tải…</option></select>
+          <p class="muted">Kịch bản tính sẵn bằng mô hình thủy động lực Itzï.</p>
+        </div>
+
+        <button id="btn-run" class="primary">▶ Chạy mô phỏng</button>
+        <div id="run-status" class="muted"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Lớp hiển thị</h2>
+        <label class="chk"><input type="checkbox" id="lyr-flood" checked /> Độ sâu ngập</label>
+        <label class="chk"><input type="checkbox" id="lyr-salt" checked /> Xâm nhập mặn (sông)</label>
+        <label class="chk"><input type="checkbox" id="lyr-stations" checked /> Trạm quan trắc</label>
+        <label>Độ trong lớp ngập
+          <input type="range" id="p-opacity" min="0" max="1" step="0.05" value="0.75" /></label>
+        <div class="legend">
+          <div class="legend-title">Độ sâu ngập (m)</div>
+          <div class="legend-bar flood"></div>
+          <div class="legend-scale"><span>0</span><span>1.5</span><span>≥3</span></div>
+          <div class="legend-title">Độ mặn sông (g/l)</div>
+          <div class="legend-bar salt"></div>
+          <div class="legend-scale"><span>0</span><span>4</span><span>≥15</span></div>
+        </div>
+      </section>
+
+      <section class="panel" id="alert-panel">
+        <h2>⚠️ Cảnh báo tại vị trí của bạn</h2>
+        <button id="btn-locate">📍 Xác định vị trí của tôi</button>
+        <div id="alert-body" class="muted">Nhấn nút trên hoặc bấm vào bản đồ để xem cảnh báo chi tiết tại một vị trí.</div>
+      </section>
+    </aside>
+
+    <main id="map-wrap">
+      <div id="map"></div>
+      <div id="timebar">
+        <button id="btn-play" title="Phát/dừng">▶</button>
+        <input type="range" id="time-slider" min="0" max="23" step="1" value="0" />
+        <div id="time-label">—</div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
