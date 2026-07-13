@@ -10,6 +10,8 @@ HAND (Height Above Nearest Drainage) duoc xap xi bang:
 Voi dong bang phang va mang song day dac, day la xap xi hop ly va rat nhanh.
 Ket qua duoc cache vao {DATA_DIR}/dem/terrain_cache.npz.
 """
+import hashlib
+import json
 import os
 
 import numpy as np
@@ -22,7 +24,12 @@ BBOX = (104.4, 8.4, 107.0, 11.3)   # lon_min, lat_min, lon_max, lat_max
 RES = 0.0025                        # ~275 m/cell
 KM_PER_DEG_LAT = 111.32
 
-CACHE_VERSION = 8  # doi khi hinh hoc song/DEM tong hop thay doi
+CACHE_VERSION = 9  # doi khi thuat toan build thay doi
+
+def _rivers_hash():
+    """Hash hinh hoc song de cache tu vo hieu khi rivers_osm.json cap nhat."""
+    blob = json.dumps({k: r["points"] for k, r in RIVERS.items()}, sort_keys=True)
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
 class Terrain:
@@ -51,7 +58,9 @@ class Terrain:
         use_real = os.path.exists(dem_tif)
         if os.path.exists(cache):
             z = np.load(cache)
-            if int(z.get("version", 0)) == CACHE_VERSION and bool(z["real_dem"]) == use_real:
+            if (int(z.get("version", 0)) == CACHE_VERSION
+                    and str(z.get("rivers_hash", "")) == _rivers_hash()
+                    and bool(z["real_dem"]) == use_real):
                 self.dem = z["dem"]; self.hand = z["hand"]
                 self.river_dist_km = z["river_dist_km"]
                 self.river_chainage_km = z["river_chainage_km"]
@@ -63,7 +72,8 @@ class Terrain:
         self._build(use_real, dem_tif)
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         np.savez_compressed(
-            cache, version=CACHE_VERSION, real_dem=use_real, dem=self.dem,
+            cache, version=CACHE_VERSION, rivers_hash=_rivers_hash(),
+            real_dem=use_real, dem=self.dem,
             hand=self.hand, river_dist_km=self.river_dist_km,
             river_chainage_km=self.river_chainage_km, river_id=self.river_id,
             sea_dist_km=self.sea_dist_km, river_names=np.array(self.river_names),
