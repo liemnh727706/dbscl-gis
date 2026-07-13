@@ -11,6 +11,8 @@ const state = {
   playTimer: null,
   userMarker: null,
   scenarios: [],
+  forecast: null,         // ket qua du bao man nhieu ngay
+  fcDay: 0,               // ngay dang xem trong du bao
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -45,11 +47,12 @@ function floodTileUrl(t) {
   const q = new URLSearchParams({
     url: path, rescale: "0,3", colormap_name: "blues",
   });
-  return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}@1x.png?${q.toString()}`;
+  return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?${q.toString()}`;
 }
 
 function updateFloodLayer() {
   if (!state.meta) return;
+  if (!map.isStyleLoaded()) { map.once("load", updateFloodLayer); return; }
   const tiles = [floodTileUrl(state.t)];
   const src = map.getSource("flood");
   if (src && typeof src.setTiles === "function") {
@@ -84,6 +87,7 @@ const SALT_COLORS = [
 
 function updateSalinityLayers() {
   if (!state.salinity) return;
+  if (!map.isStyleLoaded()) { map.once("load", updateSalinityLayers); return; }
   const seg = state.salinity.segments;
   const fronts = state.salinity.fronts;
   if (map.getSource("salt-segments")) {
@@ -123,6 +127,165 @@ function updateSalinityLayers() {
   const vis = $("#lyr-salt").checked ? "visible" : "none";
   map.setLayoutProperty("salt-segments", "visibility", vis);
   map.setLayoutProperty("salt-fronts", "visibility", vis);
+}
+
+// ===================== Lop raster vung anh huong man =====================
+// To mau dai dat ven song theo do man (g/l) - cung thang mau voi duong song.
+const SALT_COLORMAP = JSON.stringify([
+  [[0.1, 0.5], [46, 125, 50, 130]],
+  [[0.5, 1.0], [158, 157, 36, 145]],
+  [[1.0, 4.0], [249, 168, 37, 160]],
+  [[4.0, 10.0], [239, 108, 0, 175]],
+  [[10.0, 20.0], [211, 47, 47, 185]],
+  [[20.0, 35.0], [123, 31, 162, 195]],
+]);
+
+function zoneTileUrl(tifPath) {
+  const q = new URLSearchParams({ url: tifPath, colormap: SALT_COLORMAP });
+  return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?${q.toString()}`;
+}
+
+function updateZoneLayer(tifPath) {
+  if (!tifPath) return;
+  if (!map.isStyleLoaded()) { map.once("load", () => updateZoneLayer(tifPath)); return; }
+  const tiles = [zoneTileUrl(tifPath)];
+  const src = map.getSource("salt-zone");
+  if (src && typeof src.setTiles === "function") {
+    src.setTiles(tiles);
+  } else {
+    if (map.getLayer("salt-zone")) map.removeLayer("salt-zone");
+    if (src) map.removeSource("salt-zone");
+    map.addSource("salt-zone", { type: "raster", tiles, tileSize: 256 });
+    map.addLayer(
+      { id: "salt-zone", type: "raster", source: "salt-zone",
+        paint: { "raster-opacity": 0.8 } },
+      map.getLayer("salt-segments") ? "salt-segments" : undefined,
+    );
+  }
+  updateZoneVisibility();
+}
+
+function updateZoneVisibility() {
+  if (map.getLayer("salt-zone"))
+    map.setLayoutProperty("salt-zone", "visibility",
+      $("#lyr-salt-zone").checked ? "visible" : "none");
+}
+
+// ===================== Du bao xam nhap man =====================
+const FC_RIVERS = ["song_hau", "ham_luong", "co_chien", "vam_co"];
+const FC_COLORS = { song_hau: "#64b5f6", ham_luong: "#f9a825",
+                    co_chien: "#ef6c00", vam_co: "#e57373" };
+
+async function runForecast() {
+  const btn = $("#btn-forecast");
+  btn.disabled = true;
+  $("#fc-status").textContent = "⏳ Đang tính dự báo 10 ngày…";
+  try {
+    const res = await fetch("/api/salinity/forecast?days=10");
+    if (!res.ok) throw new Error((await res.json()).error || res.status);
+    state.forecast = await res.json();
+    state.fcDay = 0;
+    const sl = $("#fc-day");
+    sl.max = state.forecast.dates.length - 1;
+    sl.value = 0;
+    $("#fc-body").classList.remove("hidden");
+    $("#fc-status").innerHTML =
+      `✅ ${state.forecast.dates.length} ngày · <span class="muted">${state.forecast.calibration?.note || ""}</span>`;
+    renderForecastChart();
+    renderForecastStations();
+    applyForecastDay(0);
+  } catch (e) {
+    $("#fc-status").textContent = `❌ Lỗi: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function applyForecastDay(i) {
+  const fc = state.forecast;
+  if (!fc) return;
+  state.fcDay = i;
+  const day = fc.timeline[i];
+  $("#fc-date").textContent = formatDate(fc.dates[i]);
+
+  // To lai mau duong song theo L cua ngay duoc chon
+  const segs = {
+    type: "FeatureCollection",
+    features: fc.segments.features.map((f) => {
+      const L = day.l_by_river_km[f.properties.river_id] || 25;
+      const s = 30 * Math.exp(-f.properties.chainage_km / L);
+      return { ...f, properties: { ...f.properties, salinity: +s.toFixed(2) } };
+    }),
+  };
+  const fronts = {
+    type: "FeatureCollection",
+    features: fc.fronts.features.filter((f) => f.properties.day === i),
+  };
+  state.salinity = { segments: segs, fronts };
+  updateSalinityLayers();
+
+  // Raster vung anh huong man cua ngay
+  if (fc.zone_tile_path_template)
+    updateZoneLayer(fc.zone_tile_path_template.replace(
+      "{d:02d}", String(i).padStart(2, "0")));
+  renderForecastChart(); // ve lai con tro ngay
+}
+
+function formatDate(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+}
+
+// Bieu do SVG: ranh man 4 g/l (km tu cua song) theo ngay, 4 song chinh
+function renderForecastChart() {
+  const fc = state.forecast;
+  if (!fc) return;
+  const W = 296, H = 130, PAD = { l: 30, r: 6, t: 8, b: 18 };
+  const n = fc.timeline.length;
+  const series = FC_RIVERS.map((key) => ({
+    key,
+    vals: fc.timeline.map((d) => d.summary[key]?.front_4gl_km ?? 0),
+  }));
+  const maxV = Math.max(...series.flatMap((s) => s.vals), 10) * 1.1;
+  const x = (i) => PAD.l + (i / Math.max(n - 1, 1)) * (W - PAD.l - PAD.r);
+  const y = (v) => H - PAD.b - (v / maxV) * (H - PAD.t - PAD.b);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // truc + luoi ngang
+  for (const v of [0, Math.round(maxV / 2), Math.round(maxV)]) {
+    svg += `<line x1="${PAD.l}" y1="${y(v)}" x2="${W - PAD.r}" y2="${y(v)}" stroke="#2b4358" stroke-width="1"/>` +
+           `<text x="${PAD.l - 4}" y="${y(v) + 3}" fill="#90a4b8" font-size="8" text-anchor="end">${v}</text>`;
+  }
+  // con tro ngay dang chon
+  svg += `<line x1="${x(state.fcDay)}" y1="${PAD.t}" x2="${x(state.fcDay)}" y2="${H - PAD.b}" stroke="#8ab4d8" stroke-dasharray="3 2"/>`;
+  for (const s of series) {
+    const pts = s.vals.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    svg += `<polyline points="${pts}" fill="none" stroke="${FC_COLORS[s.key]}" stroke-width="1.8"/>`;
+  }
+  // nhan ngay dau/cuoi
+  svg += `<text x="${x(0)}" y="${H - 5}" fill="#90a4b8" font-size="8">${formatDate(fc.dates[0])}</text>` +
+         `<text x="${x(n - 1)}" y="${H - 5}" fill="#90a4b8" font-size="8" text-anchor="end">${formatDate(fc.dates[n - 1])}</text>`;
+  svg += "</svg>";
+  const names = { song_hau: "Hậu", ham_luong: "Hàm Luông", co_chien: "Cổ Chiên", vam_co: "Vàm Cỏ" };
+  const legend = FC_RIVERS.map((k) =>
+    `<span class="fc-lg"><i style="background:${FC_COLORS[k]}"></i>${names[k]}</span>`).join("");
+  $("#fc-chart").innerHTML = svg + `<div class="fc-legend">${legend}</div>`;
+}
+
+// Danh sach tram: ngay du bao man vuot nguong
+function renderForecastStations() {
+  const fc = state.forecast;
+  if (!fc?.stations?.length) { $("#fc-stations").innerHTML = ""; return; }
+  const rows = fc.stations.map((st) => {
+    const d4 = st.first_day_over_4gl, d1 = st.first_day_over_1gl;
+    const badge = d4
+      ? `<b style="color:#ef6c00">≥4 g/l từ ${formatDate(d4)}</b>`
+      : d1 ? `<b style="color:#f9a825">≥1 g/l từ ${formatDate(d1)}</b>`
+           : `<b style="color:#2e7d32">ngọt trong kỳ dự báo</b>`;
+    return `<div class="fc-station">📍 <b>${st.name}</b> · ${st.river}` +
+           `<br/><span class="muted">cách cửa sông ${st.chainage_km} km — ${badge}</span></div>`;
+  });
+  $("#fc-stations").innerHTML =
+    `<div class="legend-title">Dự báo tại trạm đo mặn</div>` + rows.join("");
 }
 
 // ===================== Tram quan trac =====================
@@ -176,6 +339,7 @@ async function runSimulation() {
     setupSlider();
     updateFloodLayer();
     updateSalinityLayers();
+    updateZoneLayer(data.salinity?.zone_tile_path);
     const st = data.flood.stats?.[0];
     $("#run-status").textContent =
       `✅ Xong: ${data.flood.times.length} bước thời gian` +
@@ -342,6 +506,11 @@ $("#p-opacity").addEventListener("input", (e) => {
 });
 $("#lyr-flood").addEventListener("change", updateFloodLayer);
 $("#lyr-salt").addEventListener("change", updateSalinityLayers);
+$("#lyr-salt-zone").addEventListener("change", updateZoneVisibility);
+
+$("#btn-forecast").addEventListener("click", runForecast);
+$("#fc-day").addEventListener("input", (e) =>
+  applyForecastDay(Number(e.target.value)));
 
 map.on("click", (e) => {
   // bo qua click trung layer (da co popup rieng)

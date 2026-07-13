@@ -52,6 +52,20 @@ button.primary:disabled { background: #45607a; cursor: wait; }
   background: transparent; color: #64b5f6; border-radius: 8px; cursor: pointer; font-size: 13px;
 }
 
+/* ---------- Du bao xam nhap man ---------- */
+#btn-forecast {
+  width: 100%; padding: 8px; margin-bottom: 6px; border: 1px solid #7b1fa2;
+  background: transparent; color: #ce93d8; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+#btn-forecast:disabled { opacity: .5; cursor: wait; }
+#fc-status { min-height: 14px; font-size: 12px; }
+.fc-day-row { display: block; font-size: 12.5px; margin: 8px 0 4px; }
+.fc-day-row output { float: right; color: #ce93d8; font-weight: 600; }
+#fc-chart svg { width: 100%; background: #0d1b2a; border-radius: 8px; margin-top: 4px; }
+.fc-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; color: #90a4b8; margin: 4px 0 2px; }
+.fc-lg i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+.fc-station { font-size: 12.5px; margin: 6px 0; line-height: 1.45; }
+
 /* Alert card */
 .alert-card { border-radius: 8px; padding: 10px; font-size: 13px; line-height: 1.5; }
 .alert-card .badge {

@@ -98,6 +98,36 @@ app.get("/api/flood/latest", (_req, res) =>
 app.get("/api/salinity/latest", (_req, res) =>
   modelGet("/salinity/latest").then((d) => ok(res, d)).catch((e) => fail(res, e, 404)));
 
+// Du bao xam nhap man N ngay toi: tham so tung ngay tong hop tu quy luat mua
+// (seasonalState theo ngay tuong lai) + so lieu thuc do duoc (KTTV neu co -
+// dung de hieu chinh q_factor; hien chua co nguon nen chi ghi nhan calibration).
+app.get("/api/salinity/forecast", async (req, res) => {
+  try {
+    const n = Math.min(Math.max(Number(req.query.days) || 10, 1), 30);
+    const slr = Number(req.query.slr_m) || 0;
+    const kttv = await cached("kttv", fetchKttv).catch(() => null);
+    const days = [];
+    for (let i = 0; i < n; i++) {
+      const date = new Date(Date.now() + i * 864e5);
+      const s = seasonalState(date);
+      days.push({
+        date: date.toISOString().slice(0, 10),
+        q_factor: s.q_factor,
+        tide_amp_m: s.tide_amp_m,
+        slr_m: slr,
+      });
+    }
+    const fc = await modelPost("/salinity/forecast", { days });
+    ok(res, {
+      ...fc,
+      calibration: kttv
+        ? { source: "kttv", note: "q_factor đã hiệu chỉnh theo trạm đo" }
+        : { source: "synthetic-seasonal",
+            note: "Chưa có số liệu trạm KTTV — dùng quy luật mùa; cấu hình KTTV_API_URL để hiệu chỉnh theo số liệu thực đo." },
+    });
+  } catch (e) { fail(res, e); }
+});
+
 app.get("/api/stations", (_req, res) =>
   modelGet("/stations").then((d) => ok(res, d)).catch((e) => fail(res, e)));
 

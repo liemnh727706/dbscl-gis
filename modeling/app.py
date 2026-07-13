@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from engine.terrain import get_terrain
 from engine.flood import compute_flood, sample_depth, load_latest_meta
-from engine.salinity import compute_salinity, sample_salinity
+from engine.salinity import compute_salinity, compute_forecast, sample_salinity
 from engine.rivers import STATIONS
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -33,6 +33,17 @@ class SalinityParams(BaseModel):
     q_factor: float = Field(1.0, ge=0.2, le=5)
     slr_m: float = Field(0.0, ge=0, le=2)
     tide_amp_m: float = Field(1.4, ge=0, le=3)
+
+
+class ForecastDay(BaseModel):
+    date: str
+    q_factor: float = Field(1.0, ge=0.2, le=5)
+    tide_amp_m: float = Field(1.4, ge=0, le=3)
+    slr_m: float = Field(0.0, ge=0, le=2)
+
+
+class ForecastParams(BaseModel):
+    days: list[ForecastDay] = Field(..., min_length=1, max_length=30)
 
 
 @app.on_event("startup")
@@ -91,7 +102,22 @@ def flood_sample(lat: float = Query(...), lon: float = Query(...),
 
 @app.post("/salinity/run")
 def salinity_run(p: SalinityParams):
-    return compute_salinity(p.model_dump(), DATA_DIR)
+    return compute_salinity(p.model_dump(), DATA_DIR, get_terrain(DATA_DIR))
+
+
+@app.post("/salinity/forecast")
+def salinity_forecast(p: ForecastParams):
+    return compute_forecast([d.model_dump() for d in p.days], DATA_DIR,
+                            get_terrain(DATA_DIR))
+
+
+@app.get("/salinity/forecast/latest")
+def salinity_forecast_latest():
+    path = os.path.join(DATA_DIR, "outputs", "latest_salinity_forecast.json")
+    if not os.path.exists(path):
+        raise HTTPException(404, "Chua co du bao man nao")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 @app.get("/salinity/latest")

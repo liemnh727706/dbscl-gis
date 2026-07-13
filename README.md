@@ -106,11 +106,23 @@ docker compose up -d --build
 - **HAND-FIM**: `depth = stage(sông gần nhất) − HAND`, stage gồm triều (suy giảm
   e-fold 90 km lên thượng nguồn), lũ thượng nguồn, SLR, nước dâng, cộng ngập úng
   do mưa ở vùng trũng. Nhanh (~giây/bước) nên chạy realtime được.
-- **Mặn 1D**: `S(x) = 30·exp(−x/L)`, L phụ thuộc Q, SLR, triều — hiệu chỉnh theo
-  ranh mặn 4 g/l điển hình mùa khô (45–60 km, tương tự đợt hạn mặn 2016/2020).
+- **Mặn 1D**: `S(x) = 30·exp(−x/L_sông)`, L phụ thuộc Q, SLR, triều, nhân thêm
+  hệ số riêng từng sông (`l_factor`, hiệu chỉnh theo hạn mặn 2016/2020: Vàm Cỏ
+  sâu nhất ~110–130 km, Hàm Luông 75–90 km, Hậu/Tiền 55–65 km).
+- **Vùng ảnh hưởng mặn ven sông**: raster GeoTIFF tô màu dải đất dọc sông theo
+  độ mặn — `S_cell = S_sông(điểm sông gần nhất) · exp(−d/8 km)`, cắt tại 15 km
+  (nước mặn theo kênh rạch lan vào nội đồng) — hiển thị qua TiTiler với thang
+  màu trùng thang độ mặn của lớp sông.
+- **Dự báo xâm nhập mặn**: `GET /api/salinity/forecast?days=N` — server tổng
+  hợp tham số từng ngày (quy luật mùa chiếu tới ngày tương lai + dữ liệu thực
+  đo khi có; đặt `KTTV_API_URL` để hiệu chỉnh theo trạm đo), modeling tính
+  L/ranh mặn/raster vùng cho từng ngày và ước ngày ranh 4 g/l & 1 g/l chạm
+  các trạm đo mặn. Client có panel dự báo: slider ngày, biểu đồ ranh mặn
+  4 g/l theo ngày của 4 sông chính, danh sách "mặn tới trạm từ ngày…".
 - **Hình học sông**: đường tâm 8 nhánh sông chính lấy từ **OpenStreetMap**
-  (file `modeling/engine/rivers_osm.json`, sinh bằng
-  `modeling/scripts/fetch_rivers_osm.py` — chạy lại khi muốn cập nhật), nên
-  lớp mặn hiển thị trùng khớp với lòng sông trên bản đồ.
+  bằng định tuyến đồ thị (Dijkstra) trên mạng lưới way sông — mọi điểm đều
+  nằm đúng trên lòng sông thật, không cắt qua đất liền khi sông tách nhánh
+  quanh cù lao (file `modeling/engine/rivers_osm.json`, sinh bằng
+  `modeling/scripts/fetch_rivers_osm.py` — chạy lại khi muốn cập nhật).
 - Mô hình đơn giản hóa phục vụ **mô phỏng/giáo dục/cảnh báo sơ bộ**, không thay
   thế bản tin dự báo chính thức của cơ quan KTTV.

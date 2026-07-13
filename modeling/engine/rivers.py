@@ -10,10 +10,17 @@ import json as _json
 import os as _os
 
 # (lon, lat) tu cua song nguoc len thuong nguon
+#
+# l_factor: he so chieu dai xam nhap man RIENG TUNG SONG (nhan vao L chung),
+# hieu chinh theo so lieu cac dot han man 2016 va 2019-2020 (KTTV, Vien KH
+# Thuy loi mien Nam): Vam Co vao sau nhat (~100-130 km), Ham Luong 75-90 km,
+# Co Chien ~65-70 km, Hau/Tien 55-65 km; vung ban dao Ca Mau (Ganh Hao,
+# Ong Doc, Cai Lon) gan nhu man quanh nam do khong co nguon ngot thuong nguon.
 RIVERS = {
     "song_hau": {
         "name": "Sông Hậu (cửa Trần Đề / Định An)",
         "mouth": "Biển Đông",
+        "l_factor": 1.0,
         "points": [
             (106.55, 9.52), (106.40, 9.62), (106.20, 9.72), (106.05, 9.82),
             (105.95, 9.92), (105.85, 10.00), (105.78, 10.03),  # Can Tho
@@ -24,6 +31,7 @@ RIVERS = {
     "song_tien": {
         "name": "Sông Tiền (cửa Tiểu / cửa Đại)",
         "mouth": "Biển Đông",
+        "l_factor": 1.0,
         "points": [
             (106.73, 10.18), (106.60, 10.25), (106.47, 10.31),
             (106.36, 10.36),  # My Tho
@@ -37,6 +45,7 @@ RIVERS = {
     "ham_luong": {
         "name": "Sông Hàm Luông",
         "mouth": "Biển Đông",
+        "l_factor": 1.35,
         "points": [
             (106.62, 9.98), (106.52, 10.08), (106.42, 10.16),
             (106.37, 10.23),  # Ben Tre
@@ -46,6 +55,7 @@ RIVERS = {
     "co_chien": {
         "name": "Sông Cổ Chiên",
         "mouth": "Biển Đông",
+        "l_factor": 1.15,
         "points": [
             (106.55, 9.80), (106.45, 9.88), (106.34, 9.95),  # Tra Vinh
             (106.20, 10.05), (106.10, 10.15), (105.97, 10.25),  # Vinh Long
@@ -54,6 +64,7 @@ RIVERS = {
     "vam_co": {
         "name": "Sông Vàm Cỏ",
         "mouth": "Cửa Soài Rạp",
+        "l_factor": 1.75,
         "points": [
             (106.74, 10.42), (106.60, 10.46), (106.50, 10.50),
             (106.41, 10.53),  # Tan An
@@ -63,6 +74,7 @@ RIVERS = {
     "cai_lon": {
         "name": "Sông Cái Lớn",
         "mouth": "Vịnh Rạch Giá (Biển Tây)",
+        "l_factor": 1.3,
         "points": [
             (105.10, 9.83), (105.20, 9.78), (105.28, 9.73),  # Go Quao
             (105.40, 9.68), (105.55, 9.65),
@@ -71,6 +83,7 @@ RIVERS = {
     "ganh_hao": {
         "name": "Sông Gành Hào",
         "mouth": "Biển Đông (Cà Mau)",
+        "l_factor": 1.5,
         "points": [
             (105.42, 9.03), (105.33, 9.08), (105.24, 9.13),
             (105.15, 9.18),  # Ca Mau
@@ -79,6 +92,7 @@ RIVERS = {
     "ong_doc": {
         "name": "Sông Ông Đốc",
         "mouth": "Biển Tây (Cà Mau)",
+        "l_factor": 1.5,
         "points": [
             (104.83, 9.24), (104.95, 9.22), (105.05, 9.20), (105.15, 9.18),
         ],
