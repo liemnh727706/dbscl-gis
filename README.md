@@ -1,9 +1,11 @@
 # 🌊 Hệ thống mô phỏng ngập lụt & xâm nhập mặn ĐBSCL
 
 Ứng dụng web mô phỏng **ngập lụt** và **xâm nhập mặn** lưu vực sông Mekong tại
-Đồng bằng sông Cửu Long, hiển thị trên bản đồ theo thời gian (time slider),
+Đồng bằng sông Cửu Long **và lưu vực hạ lưu Đồng Nai – Sài Gòn** (TP.HCM,
+Biên Hòa, Nhà Bè…), hiển thị trên bản đồ theo thời gian (time slider),
 chạy theo **dữ liệu thời gian thực** hoặc **kịch bản người dùng tự điều chỉnh**,
-và **cảnh báo chi tiết tại vị trí người dùng**.
+và **cảnh báo chi tiết tại vị trí người dùng**. Gồm 10 nhánh sông chính,
+18 tỉnh/thành với thống kê ngập – mặn đến cấp xã/phường.
 
 ## Kiến trúc
 

@@ -96,9 +96,15 @@ button.primary:disabled { background: #45607a; cursor: wait; }
 }
 #time-label { font-size: 12px; min-width: 120px; text-align: right; color: #8ab4d8; }
 
+.station-wrap { text-align: center; cursor: pointer; }
 .station-marker {
   background: #ffb300; border: 2px solid #fff; border-radius: 50%;
-  width: 11px; height: 11px; cursor: pointer;
+  width: 14px; height: 14px; margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+.station-label {
+  font-size: 10px; font-weight: 700; color: #7a5600; white-space: nowrap;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
 }
 .user-marker { font-size: 26px; line-height: 1; filter: drop-shadow(0 1px 2px #000); }
 

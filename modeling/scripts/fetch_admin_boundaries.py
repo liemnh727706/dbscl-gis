@@ -23,6 +23,8 @@ DELTA_PROVINCES = {
     "angiang", "baclieu", "bentre", "camau", "cantho", "dongthap",
     "haugiang", "kiengiang", "longan", "soctrang", "tiengiang",
     "travinh", "vinhlong",
+    # Luu vuc Dong Nai - Sai Gon (mo rong)
+    "hochiminh", "dongnai", "binhduong", "tayninh", "baria-vungtau",
 }
 
 

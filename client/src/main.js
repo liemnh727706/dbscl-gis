@@ -22,8 +22,8 @@ const $ = (sel) => document.querySelector(sel);
 // ===================== Khoi tao ban do =====================
 const map = new maplibregl.Map({
   container: "map",
-  center: [105.7, 9.95],
-  zoom: 7.6,
+  center: [105.95, 10.05],  // DBSCL + luu vuc Sai Gon - Dong Nai
+  zoom: 7.3,
   style: {
     version: 8,
     // Font ho tro day du dau tieng Viet (da kiem tra range 7680-7935)
@@ -148,7 +148,7 @@ whenStyleReady(addVietnamLabels);
 // Anh PNG toan vung do modeling render (grid ~275 m nen tuong duong tile ve
 // chi tiet, khong can TiTiler). Goc anh theo BBOX luoi tinh (engine/terrain.py).
 const GRID_BOUNDS = [
-  [104.4, 11.3], [107.0, 11.3], [107.0, 8.4], [104.4, 8.4],
+  [104.4, 11.35], [107.45, 11.35], [107.45, 8.4], [104.4, 8.4],
 ];
 
 // Chuyen "/data/outputs/..." trong metadata -> tham so file cua /api/render.png
@@ -323,9 +323,10 @@ function updateZoneVisibility() {
 }
 
 // ===================== Du bao xam nhap man =====================
-const FC_RIVERS = ["song_hau", "ham_luong", "co_chien", "vam_co"];
+const FC_RIVERS = ["song_hau", "ham_luong", "co_chien", "vam_co", "song_saigon"];
 const FC_COLORS = { song_hau: "#64b5f6", ham_luong: "#f9a825",
-                    co_chien: "#ef6c00", vam_co: "#e57373" };
+                    co_chien: "#ef6c00", vam_co: "#e57373",
+                    song_saigon: "#ab47bc" };
 
 async function runForecast() {
   const btn = $("#btn-forecast");
@@ -416,7 +417,8 @@ function renderForecastChart() {
   svg += `<text x="${x(0)}" y="${H - 5}" fill="#90a4b8" font-size="8">${formatDate(fc.dates[0])}</text>` +
          `<text x="${x(n - 1)}" y="${H - 5}" fill="#90a4b8" font-size="8" text-anchor="end">${formatDate(fc.dates[n - 1])}</text>`;
   svg += "</svg>";
-  const names = { song_hau: "Hậu", ham_luong: "Hàm Luông", co_chien: "Cổ Chiên", vam_co: "Vàm Cỏ" };
+  const names = { song_hau: "Hậu", ham_luong: "Hàm Luông", co_chien: "Cổ Chiên",
+                  vam_co: "Vàm Cỏ", song_saigon: "Sài Gòn" };
   const legend = FC_RIVERS.map((k) =>
     `<span class="fc-lg"><i style="background:${FC_COLORS[k]}"></i>${names[k]}</span>`).join("");
   $("#fc-chart").innerHTML = svg + `<div class="fc-legend">${legend}</div>`;
@@ -440,21 +442,49 @@ function renderForecastStations() {
 }
 
 // ===================== Tram quan trac =====================
+const STATION_TYPE_LABEL = {
+  water_level: "mực nước", salinity: "độ mặn", both: "mực nước + độ mặn",
+};
+
 async function loadStations() {
   try {
     const stations = await (await fetch("/api/stations")).json();
     for (const s of stations) {
+      // Marker to, kem ten tram de thay ro tren ban do
       const el = document.createElement("div");
-      el.className = "station-marker";
-      new maplibregl.Marker({ element: el })
+      el.className = "station-wrap";
+      el.innerHTML = `<div class="station-marker" title="Trạm ${s.name}"></div>` +
+        `<div class="station-label">${s.name}</div>`;
+      const popup = new maplibregl.Popup({ maxWidth: "300px" });
+      popup.on("open", () => fillStationPopup(popup, s));
+      new maplibregl.Marker({ element: el, anchor: "center" })
         .setLngLat([s.lon, s.lat])
-        .setPopup(new maplibregl.Popup().setHTML(
-          `<b>Trạm ${s.name}</b><br/>Loại: ${
-            s.type === "water_level" ? "mực nước" : s.type === "salinity" ? "độ mặn" : "mực nước + độ mặn"
-          }`))
+        .setPopup(popup)
         .addTo(map);
     }
   } catch { /* khong chan UI */ }
+}
+
+// Khi mo popup tram: lay so lieu ngap/man hien tai tu ket qua mo phong
+async function fillStationPopup(popup, s) {
+  const head = `<b>📡 Trạm ${s.name}</b><br/>` +
+    `<span class="muted">Quan trắc: ${STATION_TYPE_LABEL[s.type] || s.type}</span>`;
+  popup.setHTML(`${head}<br/>Đang tải số liệu…`);
+  try {
+    const a = await (await fetch(
+      `/api/alerts?lat=${s.lat}&lon=${s.lon}&t=${state.t}`)).json();
+    let rows = "";
+    if (s.type !== "salinity")
+      rows += `<br/>🌊 Ngập hiện tại: <b>${a.flood.depth_m} m</b>` +
+              ` · sâu nhất đợt: <b>${a.flood.max_depth_m} m</b>`;
+    if (s.type !== "water_level")
+      rows += `<br/>🧂 Độ mặn: <b style="color:${a.salinity.color}">` +
+              `${a.salinity.salinity_gl} g/l</b> (${a.salinity.label})`;
+    popup.setHTML(head + rows +
+      `<br/><span class="muted">Theo mô phỏng lúc ${$("#time-label").textContent}</span>`);
+  } catch {
+    popup.setHTML(`${head}<br/><span class="muted">Chưa có kết quả mô phỏng.</span>`);
+  }
 }
 
 // ===================== Chay mo phong =====================

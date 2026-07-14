@@ -33,7 +33,8 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from engine.rivers import RIVERS  # noqa: E402
 
-OVERPASS = "https://overpass-api.de/api/interpreter"
+OVERPASS = os.environ.get("OVERPASS_URL",
+                          "https://overpass-api.de/api/interpreter")
 UA = "mekong-flood-sim/1.0 (contact: liemnh@hcmuaf.edu.vn)"
 KM_PER_DEG = 111.32
 
@@ -47,6 +48,9 @@ NAME_RE = {
     "cai_lon": r"C.i L.n",
     "ganh_hao": r"G.nh H.o",
     "ong_doc": r".ng ..c",
+    # Sai Gon & Dong Nai cung do ra cua Soai Rap qua song Nha Be
+    "song_saigon": r"S.i G.n|Nh. B.|So.i R.p",
+    "song_dongnai": r"S.ng ..ng Nai|Nh. B.|So.i R.p",
 }
 
 CORRIDOR_KM = 10.0    # chi giu node cach polyline tho < 10 km

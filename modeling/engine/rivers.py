@@ -97,6 +97,34 @@ RIVERS = {
             (104.83, 9.24), (104.95, 9.22), (105.05, 9.20), (105.15, 9.18),
         ],
     },
+    # Luu vuc Dong Nai - Sai Gon (mo rong ngoai DBSCL): ca hai cung do ra
+    # cua Soai Rap qua song Nha Be; man theo trieu len toi Nha Be/Cat Lai,
+    # dot han 2016/2020 len qua Thu Thiem (l_factor hieu chinh theo do)
+    "song_saigon": {
+        "name": "Sông Sài Gòn (qua Nhà Bè - Soài Rạp)",
+        "mouth": "Cửa Soài Rạp",
+        "l_factor": 1.2,
+        "points": [
+            (106.79, 10.32), (106.77, 10.47), (106.76, 10.62),
+            (106.74, 10.70),  # Nha Be
+            (106.71, 10.77),  # Phu An (Q.1)
+            (106.73, 10.83),  # Thanh Da
+            (106.70, 10.90), (106.62, 10.98), (106.55, 11.06),  # Cu Chi
+            (106.47, 11.15), (106.38, 11.25),  # ve phia ho Dau Tieng
+        ],
+    },
+    "song_dongnai": {
+        "name": "Sông Đồng Nai (qua Nhà Bè - Soài Rạp)",
+        "mouth": "Cửa Soài Rạp",
+        "l_factor": 0.9,
+        "points": [
+            (106.79, 10.32), (106.78, 10.50), (106.76, 10.65),
+            (106.79, 10.72), (106.80, 10.78),  # Cat Lai
+            (106.84, 10.86),  # Long Binh
+            (106.82, 10.94),  # Bien Hoa
+            (106.90, 11.02), (106.98, 11.07), (107.05, 11.10),  # ve Tri An
+        ],
+    },
 }
 
 # Neo polyline vao long song that tu OSM (neu da fetch)
@@ -109,12 +137,14 @@ if _os.path.exists(_OSM_FILE):
             RIVERS[_key]["points"] = [tuple(_p) for _p in _data["points"]]
             RIVERS[_key]["geometry_source"] = _data.get("source", "osm")
 
-# Duong bo bien don gian hoa (Bien Tay -> mui Ca Mau -> Bien Dong -> Go Cong)
+# Duong bo bien don gian hoa (Bien Tay -> mui Ca Mau -> Bien Dong -> Go Cong
+# -> Can Gio -> Vung Tau)
 COASTLINE = [
     (104.48, 10.38), (104.80, 10.15), (105.08, 10.00), (104.90, 9.55),
     (104.80, 9.20), (104.72, 8.60), (105.00, 8.72), (105.42, 9.02),
     (105.72, 9.28), (106.15, 9.50), (106.55, 9.52), (106.62, 9.98),
-    (106.70, 10.10), (106.78, 10.35), (106.80, 10.45),
+    (106.70, 10.10), (106.78, 10.35), (106.88, 10.40),
+    (106.98, 10.38), (107.07, 10.34), (107.25, 10.42), (107.44, 10.48),
 ]
 
 # Tram quan trac chinh (dung cho noi suy & hien thi)
@@ -128,4 +158,7 @@ STATIONS = [
     {"id": "soc_trang", "name": "Sóc Trăng (Trần Đề)", "lat": 9.60, "lon": 106.35, "river": "song_hau", "type": "salinity"},
     {"id": "rach_gia",  "name": "Rạch Giá",  "lat": 9.83,  "lon": 105.10, "river": "cai_lon",   "type": "salinity"},
     {"id": "ca_mau",    "name": "Cà Mau",    "lat": 9.18,  "lon": 105.15, "river": "ganh_hao",  "type": "salinity"},
+    {"id": "nha_be",    "name": "Nhà Bè",    "lat": 10.70, "lon": 106.74, "river": "song_saigon", "type": "salinity"},
+    {"id": "phu_an",    "name": "Phú An (Sài Gòn)", "lat": 10.77, "lon": 106.71, "river": "song_saigon", "type": "both"},
+    {"id": "bien_hoa",  "name": "Biên Hòa",  "lat": 10.94, "lon": 106.82, "river": "song_dongnai", "type": "water_level"},
 ]

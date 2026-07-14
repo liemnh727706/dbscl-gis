@@ -19,12 +19,12 @@ from scipy import ndimage
 
 from .rivers import RIVERS, COASTLINE
 
-# Pham vi luoi: toan DBSCL
-BBOX = (104.4, 8.4, 107.0, 11.3)   # lon_min, lat_min, lon_max, lat_max
+# Pham vi luoi: DBSCL + luu vuc ha luu Dong Nai - Sai Gon (TP.HCM, Bien Hoa)
+BBOX = (104.4, 8.4, 107.45, 11.35)  # lon_min, lat_min, lon_max, lat_max
 RES = 0.0025                        # ~275 m/cell
 KM_PER_DEG_LAT = 111.32
 
-CACHE_VERSION = 9  # doi khi thuat toan build thay doi
+CACHE_VERSION = 10  # doi khi thuat toan build/pham vi luoi thay doi
 
 def _rivers_hash():
     """Hash hinh hoc song de cache tu vo hieu khi rivers_osm.json cap nhat."""
@@ -175,6 +175,10 @@ class Terrain:
         LON, LAT = np.meshgrid(lon, lat)
         # Nui That Son (An Giang) - cum nui nho ~10 km
         bump = 4.0 * np.exp(-(((LON - 104.93) ** 2 + (LAT - 10.52) ** 2) / (2 * 0.07 ** 2)))
+        # Bac thang phu sa co Dong Nam Bo: dia hinh cao dan ve phia dong bac
+        # (Thu Duc, Bien Hoa, Cu Chi 5-25 m) - vung trung ven song van thap
+        bump = bump + 12.0 * (np.clip((LON - 106.35) / 0.9, 0, 1) ** 1.3
+                              * np.clip((LAT - 10.55) / 0.7, 0, 1) ** 1.3)
         # Hai vung trung ngap lu dien hinh: Dong Thap Muoi va Tu giac Long Xuyen
         dtm = -0.9 * np.exp(-(((LON - 105.65) ** 2) / (2 * 0.38 ** 2)
                               + ((LAT - 10.65) ** 2) / (2 * 0.22 ** 2)))
@@ -185,7 +189,7 @@ class Terrain:
         levee_zone = ndimage.distance_transform_edt(~river_mask) * RES * KM_PER_DEG_LAT
         dem += np.where(levee_zone < 2.0, 0.6 * (1 - levee_zone / 2.0), 0).astype(np.float32)
         dem[river_mask] = -2.0
-        return np.clip(dem, -3, 8)
+        return np.clip(dem, -3, 15)
 
 
 _terrain = None
