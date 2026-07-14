@@ -128,6 +128,12 @@ app.get("/api/salinity/forecast", async (req, res) => {
   } catch (e) { fail(res, e); }
 });
 
+// Choropleth theo don vi hanh chinh: ?level=province|commune
+app.get("/api/zones", (req, res) => {
+  const level = req.query.level === "commune" ? "commune" : "province";
+  modelGet(`/zones?level=${level}`).then((d) => ok(res, d)).catch((e) => fail(res, e));
+});
+
 app.get("/api/stations", (_req, res) =>
   modelGet("/stations").then((d) => ok(res, d)).catch((e) => fail(res, e)));
 

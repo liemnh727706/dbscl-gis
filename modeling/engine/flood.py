@@ -66,6 +66,7 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
     runoff_zone = np.clip(1.0 - hand / 2.0, 0, 1)   # vung tru mua: HAND < 2 m
 
     times, files, stats = [], [], []
+    depth_max = np.zeros((terrain.ny, terrain.nx), dtype=np.float32)
     profile = dict(
         driver="GTiff", dtype="float32", count=1, width=terrain.nx,
         height=terrain.ny, crs="EPSG:4326", transform=terrain.transform,
@@ -84,6 +85,7 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
             depth = depth + pond
         depth = np.where(depth > MIN_DEPTH, depth, 0).astype(np.float32)
 
+        np.maximum(depth_max, depth, out=depth_max)
         fname = f"depth_t{h:02d}.tif"
         path = os.path.join(out_dir, fname)
         with rasterio.open(path, "w", **profile) as dst:
@@ -98,6 +100,11 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
         times.append(t.isoformat())
         files.append(fname)
 
+    # Raster do sau ngap MAX trong ca dot - dung cho thong ke theo xa/tinh
+    with rasterio.open(os.path.join(out_dir, "depth_max.tif"), "w", **profile) as dst:
+        dst.write(depth_max, 1)
+        dst.build_overviews([2, 4, 8, 16], rasterio.enums.Resampling.average)
+
     meta = {
         "run_id": run_id, "type": "flood", "engine": "hand-fim",
         "params": {"hours": hours, "tide_amp_m": tide_amp, "surge_m": surge,
@@ -105,6 +112,7 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
         "created": datetime.now(timezone.utc).isoformat(),
         "times": times, "files": files, "stats": stats,
         "tile_path_template": f"/data/outputs/runs/{run_id}/depth_t{{t:02d}}.tif",
+        "depth_max_path": f"/data/outputs/runs/{run_id}/depth_max.tif",
         "real_dem": terrain.real_dem,
     }
     with open(os.path.join(out_dir, "metadata.json"), "w", encoding="utf-8") as f:

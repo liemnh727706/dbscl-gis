@@ -54,19 +54,32 @@
 
       <section class="panel">
         <h2>Lớp hiển thị</h2>
-        <label class="chk"><input type="checkbox" id="lyr-flood" checked /> Độ sâu ngập</label>
-        <label class="chk"><input type="checkbox" id="lyr-salt" checked /> Xâm nhập mặn (sông)</label>
+        <label class="chk"><input type="checkbox" id="lyr-flood" checked /> Độ sâu ngập (theo giờ)</label>
         <label class="chk"><input type="checkbox" id="lyr-salt-zone" checked /> Vùng ảnh hưởng mặn (ven sông)</label>
+        <label class="chk"><input type="checkbox" id="lyr-salt" checked /> Sông chính (độ mặn)</label>
         <label class="chk"><input type="checkbox" id="lyr-stations" checked /> Trạm quan trắc</label>
+        <label>Ranh giới hành chính
+          <select id="zone-level">
+            <option value="off">Tắt</option>
+            <option value="province">Tỉnh / thành phố</option>
+            <option value="commune" selected>Xã / phường</option>
+          </select></label>
+        <div class="metric-row">Tô màu ranh giới theo:
+          <label><input type="radio" name="zone-metric" value="flood" checked /> Ngập</label>
+          <label><input type="radio" name="zone-metric" value="salt" /> Mặn</label>
+        </div>
         <label>Độ trong lớp ngập
           <input type="range" id="p-opacity" min="0" max="1" step="0.05" value="0.75" /></label>
         <div class="legend">
           <div class="legend-title">Độ sâu ngập (m)</div>
           <div class="legend-bar flood"></div>
           <div class="legend-scale"><span>0</span><span>1.5</span><span>≥3</span></div>
-          <div class="legend-title">Độ mặn sông (g/l)</div>
+          <div class="legend-title">Độ mặn (g/l) — vùng &amp; sông</div>
           <div class="legend-bar salt"></div>
-          <div class="legend-scale"><span>0</span><span>4</span><span>≥15</span></div>
+          <div class="legend-scale"><span>0</span><span>4</span><span>≥20</span></div>
+          <div class="legend-title">Ranh giới: % diện tích ngập</div>
+          <div class="legend-bar zone-flood"></div>
+          <div class="legend-scale"><span>0%</span><span>50%</span><span>100%</span></div>
         </div>
       </section>
 

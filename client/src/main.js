@@ -13,6 +13,8 @@ const state = {
   scenarios: [],
   forecast: null,         // ket qua du bao man nhieu ngay
   fcDay: 0,               // ngay dang xem trong du bao
+  zoneLevel: "commune",   // ranh gioi hanh chinh: off | province | commune
+  zoneMetric: "flood",    // to mau ranh gioi theo: flood | salt
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -50,6 +52,10 @@ function floodTileUrl(t) {
   return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?${q.toString()}`;
 }
 
+// Lop dau tien dang ton tai trong danh sach -> dung lam beforeId khi addLayer
+const firstLayer = (ids) => ids.find((id) => map.getLayer(id));
+const LAYER_ORDER_ABOVE_FLOOD = ["salt-zone", "zones-fill", "salt-segments"];
+
 function updateFloodLayer() {
   if (!state.meta) return;
   if (!map.isStyleLoaded()) { map.once("load", updateFloodLayer); return; }
@@ -64,12 +70,61 @@ function updateFloodLayer() {
     map.addLayer(
       { id: "flood", type: "raster", source: "flood",
         paint: { "raster-opacity": Number($("#p-opacity").value) } },
-      map.getLayer("salt-segments") ? "salt-segments" : undefined,
+      firstLayer(LAYER_ORDER_ABOVE_FLOOD),
     );
   }
   map.setLayoutProperty("flood", "visibility",
     $("#lyr-flood").checked ? "visible" : "none");
   updateTimeLabel();
+}
+
+// ============ Choropleth theo don vi hanh chinh (tinh / xa) ============
+async function loadZones() {
+  if (state.zoneLevel === "off") { applyZoneStyle(); return; }
+  try {
+    const data = await (await fetch(`/api/zones?level=${state.zoneLevel}`)).json();
+    if (data.error) throw new Error(data.error);
+    if (map.getSource("zones")) {
+      map.getSource("zones").setData(data);
+    } else {
+      map.addSource("zones", { type: "geojson", data });
+      map.addLayer({
+        id: "zones-fill", type: "fill", source: "zones",
+        paint: { "fill-opacity": 0.62 },
+      }, firstLayer(["salt-segments"]));
+      map.addLayer({
+        id: "zones-line", type: "line", source: "zones",
+        paint: { "line-color": "rgba(255,255,255,0.55)", "line-width": 0.6 },
+      }, firstLayer(["salt-segments"]));
+      map.on("click", "zones-fill", (e) => {
+        const p = e.features[0].properties;
+        const title = p.district
+          ? `${p.type || "Xã"} ${p.name} — ${p.district}, ${p.province}`
+          : `${p.name}`;
+        new maplibregl.Popup({ maxWidth: "320px" }).setLngLat(e.lngLat).setHTML(
+          `<b>${title}</b><br/>
+           🌊 Ngập: sâu nhất <b>${p.max_depth_m ?? "–"} m</b> · TB ${p.mean_depth_m ?? "–"} m · <b>${p.pct_flooded ?? "–"}%</b> diện tích<br/>
+           🧂 Mặn: cao nhất <b>${p.max_salinity_gl ?? "–"} g/l</b> · TB ${p.mean_salinity_gl ?? "–"} g/l`,
+        ).addTo(map);
+      });
+    }
+  } catch { /* chua co mo phong / thieu ranh gioi -> bo qua */ }
+  applyZoneStyle();
+}
+
+function applyZoneStyle() {
+  if (!map.getLayer("zones-fill")) return;
+  const vis = state.zoneLevel === "off" ? "none" : "visible";
+  map.setLayoutProperty("zones-fill", "visibility", vis);
+  map.setLayoutProperty("zones-line", "visibility", vis);
+  const expr = state.zoneMetric === "salt"
+    ? ["interpolate", ["linear"], ["coalesce", ["get", "max_salinity_gl"], 0],
+       0, "rgba(46,125,50,0.10)", 0.5, "#9e9d24", 1, "#f9a825",
+       4, "#ef6c00", 10, "#d32f2f", 20, "#7b1fa2"]
+    : ["interpolate", ["linear"], ["coalesce", ["get", "pct_flooded"], 0],
+       0, "rgba(255,255,255,0.03)", 10, "#c6dbef", 30, "#6baed6",
+       60, "#2171b5", 100, "#08306b"];
+  map.setPaintProperty("zones-fill", "fill-color", expr);
 }
 
 function updateTimeLabel() {
@@ -340,6 +395,7 @@ async function runSimulation() {
     updateFloodLayer();
     updateSalinityLayers();
     updateZoneLayer(data.salinity?.zone_tile_path);
+    loadZones();
     const st = data.flood.stats?.[0];
     $("#run-status").textContent =
       `✅ Xong: ${data.flood.times.length} bước thời gian` +
@@ -511,6 +567,16 @@ $("#lyr-salt-zone").addEventListener("change", updateZoneVisibility);
 $("#btn-forecast").addEventListener("click", runForecast);
 $("#fc-day").addEventListener("input", (e) =>
   applyForecastDay(Number(e.target.value)));
+
+$("#zone-level").addEventListener("change", (e) => {
+  state.zoneLevel = e.target.value;
+  loadZones();
+});
+document.querySelectorAll('input[name="zone-metric"]').forEach((r) =>
+  r.addEventListener("change", () => {
+    state.zoneMetric = document.querySelector('input[name="zone-metric"]:checked').value;
+    applyZoneStyle();
+  }));
 
 map.on("click", (e) => {
   // bo qua click trung layer (da co popup rieng)

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from engine.terrain import get_terrain
 from engine.flood import compute_flood, sample_depth, load_latest_meta
 from engine.salinity import compute_salinity, compute_forecast, sample_salinity
+from engine.zones import zonal_stats, LEVELS
 from engine.rivers import STATIONS
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -135,6 +136,24 @@ def salinity_sample_ep(lat: float, lon: float):
     if r is None:
         raise HTTPException(404, "Chua co ket qua do man")
     return r
+
+
+@app.get("/zones")
+def zones(level: str = "province"):
+    """Choropleth: ranh gioi hanh chinh kem thong ke ngap/man moi nhat."""
+    if level not in LEVELS:
+        raise HTTPException(400, f"level phai la mot trong {list(LEVELS)}")
+    t = get_terrain(DATA_DIR)
+    meta = load_latest_meta(DATA_DIR)
+    depth_max = None
+    if meta and meta.get("depth_max_path"):
+        depth_max = os.path.join(
+            DATA_DIR, "outputs", "runs", meta["run_id"], "depth_max.tif")
+    salinity = os.path.join(DATA_DIR, "outputs", "salinity", "zone_latest.tif")
+    try:
+        return zonal_stats(t, DATA_DIR, level, depth_max, salinity)
+    except FileNotFoundError:
+        raise HTTPException(404, "Thieu file ranh gioi hanh chinh trong data/static/")
 
 
 @app.get("/stations")
