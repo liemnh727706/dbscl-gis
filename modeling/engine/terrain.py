@@ -58,16 +58,20 @@ class Terrain:
         use_real = os.path.exists(dem_tif)
         if os.path.exists(cache):
             z = np.load(cache)
+            cache_real = bool(z["real_dem"])
+            # Cache tu DEM THAT luon dung duoc (server deploy chi can
+            # terrain_cache.npz da commit, khong can keo dem.tif ~400 MB);
+            # cache tong hop bi vo hieu khi dem.tif that xuat hien
             if (int(z.get("version", 0)) == CACHE_VERSION
                     and str(z.get("rivers_hash", "")) == _rivers_hash()
-                    and bool(z["real_dem"]) == use_real):
+                    and (cache_real or not use_real)):
                 self.dem = z["dem"]; self.hand = z["hand"]
                 self.river_dist_km = z["river_dist_km"]
                 self.river_chainage_km = z["river_chainage_km"]
                 self.river_id = z["river_id"]
                 self.sea_dist_km = z["sea_dist_km"]
                 self.river_names = list(z["river_names"])
-                self.real_dem = use_real
+                self.real_dem = cache_real
                 return
         self._build(use_real, dem_tif)
         os.makedirs(os.path.dirname(cache), exist_ok=True)

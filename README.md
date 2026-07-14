@@ -60,10 +60,19 @@ cd client && npm install && npm run dev   # http://localhost:5173
 ## Dùng DEM thật (khuyến nghị khi triển khai)
 
 ```bash
-export OPENTOPO_KEY=<key miễn phí từ portal.opentopography.org>
-python modeling/scripts/download_dem.py    # tải Copernicus GLO-30 → data/dem/dem.tif
+python modeling/scripts/download_dem.py    # Copernicus GLO-30 từ AWS Open Data
 docker compose restart modeling            # tự rebuild HAND từ DEM thật
 ```
+
+Không cần API key (bucket AWS công khai của Copernicus); nếu đặt
+`OPENTOPO_KEY` sẽ dùng OpenTopography thay thế. Repo đã kèm sẵn
+`data/dem/terrain_cache.npz` **build từ DEM thật** nên server deploy dùng
+ngay độ chính xác DEM thật mà không phải tải lại (~430 MB ô gốc).
+
+> ⚠️ GLO-30 là **DSM** (đo cả mái nhà, tán cây): khu đô thị/rừng ngập mặn
+> đọc cao hơn mặt đất vài mét → ngập nội đô bị ước tính thấp; đồng ruộng
+> trống chính xác. Nâng cấp tương lai: FABDEM (đã bóc nhà/cây, cần đăng ký
+> giấy phép phi thương mại).
 
 ## Nguồn dữ liệu thời gian thực
 

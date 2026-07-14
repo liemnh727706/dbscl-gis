@@ -64,6 +64,12 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
     slow_stage = (slr + surge) * slr_reach + upstream_stage - SLOW_ATTEN_M_PER_KM * dist
     tide_damp = tidal_reach * np.exp(-dist / TIDE_LAND_DECAY_KM)
     runoff_zone = np.clip(1.0 - hand / 2.0, 0, 1)   # vung tru mua: HAND < 2 m
+    # Gioi han pham vi mo hinh (ngap chau tho/trieu):
+    # - ngoai 25 km khoi song: stage noi suy khong con y nghia
+    # - dat cao > 12 m tuyet doi (cao nguyen Dong Nai, ho Tri An ~50 m):
+    #   HAND tham chieu o song thuong nguon cao lam vung dong cao do
+    #   bi "ngap" oan tren DEM that
+    near_river = (dist <= 25.0) & (terrain.dem <= 12.0)
 
     times, files, stats = [], [], []
     depth_max = np.zeros((terrain.ny, terrain.nx), dtype=np.float32)
@@ -78,8 +84,9 @@ def compute_flood(terrain: Terrain, params: dict, data_dir: str) -> dict:
         t = t0 + timedelta(hours=h)
         phase = 2 * np.pi * (t.timestamp() / 3600.0) / TIDE_PERIOD_H
         tide = tide_amp * np.sin(phase) + 0.35 * tide_amp * np.sin(phase / 2.0)
-        depth = tide * tide_damp + slow_stage - hand
+        depth = np.where(near_river, tide * tide_damp + slow_stage - hand, 0.0)
         # Ngap ung do mua: tich luy dan trong 12h dau, he so dong chay 0.6
+        # (mua roi khap noi nen khong gioi han theo khoang cach song)
         if rain > 0:
             pond = (rain / 1000.0) * 0.6 * min(h + 1, 12) / 12.0 * runoff_zone
             depth = depth + pond
