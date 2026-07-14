@@ -76,9 +76,15 @@ def fetch_ways(key, bbox):
     named = overpass(
         f'[out:json][timeout:120];way["waterway"~"^(river|canal)$"]'
         f'["name"~"{NAME_RE[key]}"]({s},{w},{n},{e});out geom;')
-    rivers = overpass(
-        f'[out:json][timeout:120];way["waterway"="river"]'
-        f'({s},{w},{n},{e});out geom;')
+    # Lop song khong ten chi de noi doan - vung day dac (TP.HCM) hay lam
+    # Overpass 504; loi thi bo qua, do thi song co ten thuong da du lien thong
+    try:
+        rivers = overpass(
+            f'[out:json][timeout:120];way["waterway"="river"]'
+            f'({s},{w},{n},{e});out geom;')
+    except Exception as ex:
+        print(f"    (bo qua lop song khong ten: {ex})")
+        rivers = []
     seen, out = set(), []
     for w_ in named + rivers:
         if w_["id"] not in seen:
@@ -205,6 +211,21 @@ def snap_river(key, river):
             if nd < dist.get(v, 1e18):
                 dist[v] = nd; prev[v] = u
                 heapq.heappush(pq, (nd, v))
+    if dst != src and dst not in prev:
+        # Khong toi duoc dich: lay nut DA TOI DUOC gan diem thuong nguon nhat
+        # (di duoc bao xa hay bay nhieu; kiem tra 50% chieu dai o main() se
+        # loai neu qua ngan)
+        ux, uy = to_xy(*pts[-1])
+        reached = [n for n in done if n in prev or n == src]
+        if reached:
+            id_xy = {nid: to_xy(*coords[nid]) for nid in reached}
+            dst2 = min(reached, key=lambda n: (id_xy[n][0] - ux) ** 2
+                                              + (id_xy[n][1] - uy) ** 2)
+            d2_km = np.hypot(id_xy[dst2][0] - ux, id_xy[dst2][1] - uy)
+            if dst2 != src:
+                print(f"  {key}: dich goc khong lien thong, dung nut gan nhat"
+                      f" toi duoc (cach thuong nguon {d2_km:.1f} km)")
+                dst = dst2
     if dst != src and dst not in prev:
         print(f"  {key}: KHONG tim duoc duong cua song->thuong nguon, giu polyline tho")
         return None
