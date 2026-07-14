@@ -13,6 +13,7 @@ from engine.terrain import get_terrain
 from engine.flood import compute_flood, sample_depth, load_latest_meta
 from engine.salinity import compute_salinity, compute_forecast, sample_salinity
 from engine.zones import zonal_stats, LEVELS
+from engine.render import render_png, safe_output_path
 from engine.rivers import STATIONS
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -154,6 +155,25 @@ def zones(level: str = "province"):
         return zonal_stats(t, DATA_DIR, level, depth_max, salinity)
     except FileNotFoundError:
         raise HTTPException(404, "Thieu file ranh gioi hanh chinh trong data/static/")
+
+
+@app.get("/render.png")
+def render(file: str, style: str = "depth"):
+    """Anh PNG RGBA phu ban do tu GeoTIFF ket qua (thay TiTiler).
+    file: duong dan tuong doi trong data/outputs, vd runs/<id>/depth_t00.tif"""
+    from fastapi.responses import Response
+    try:
+        path = safe_output_path(DATA_DIR, file)
+    except PermissionError as e:
+        raise HTTPException(400, str(e))
+    if not os.path.exists(path):
+        raise HTTPException(404, f"Khong tim thay {file}")
+    try:
+        png = render_png(path, style)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return Response(png, media_type="image/png",
+                    headers={"cache-control": "public, max-age=86400"})
 
 
 @app.get("/stations")

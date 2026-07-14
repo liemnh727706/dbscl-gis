@@ -128,6 +128,20 @@ app.get("/api/salinity/forecast", async (req, res) => {
   } catch (e) { fail(res, e); }
 });
 
+// Anh PNG phu ban do (do sau ngap / vung man) - proxy nhi phan toi modeling
+app.get("/api/render.png", async (req, res) => {
+  try {
+    const q = new URLSearchParams(req.query).toString();
+    const r = await fetch(
+      `${process.env.MODEL_API_URL || "http://localhost:8000"}/render.png?${q}`,
+      { signal: AbortSignal.timeout(60000) });
+    if (!r.ok) return res.status(r.status).end();
+    res.set("content-type", "image/png");
+    res.set("cache-control", "public, max-age=86400");
+    res.send(Buffer.from(await r.arrayBuffer()));
+  } catch (e) { fail(res, e); }
+});
+
 // Choropleth theo don vi hanh chinh: ?level=province|commune
 app.get("/api/zones", (req, res) => {
   const level = req.query.level === "commune" ? "commune" : "province";

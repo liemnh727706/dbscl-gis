@@ -13,20 +13,18 @@ và **cảnh báo chi tiết tại vị trí người dùng**.
 │ MapLibre GL  │           │ Express       │          │ FastAPI             │
 │ time slider  │           │ · Open-Meteo  │          │ · HAND-FIM (ngập)   │
 │ geolocation  │           │ · MRC/KTTV    │          │ · Mô hình mặn 1D    │
-└──────┬──────┘           │ · cảnh báo    │          │ · DEM/HAND builder  │
-       │ /tiles           └──────────────┘          └─────────┬──────────┘
-       ▼                                                       │ GeoTIFF
-┌─────────────┐                    đọc COG/GTiff               ▼
-│   TiTiler    │◀──────────────────────────────────── /data/outputs/...
-└─────────────┘
+└─────────────┘           │ · cảnh báo    │          │ · render PNG        │
+                           └──────────────┘          └─────────┬──────────┘
+   lớp ngập/mặn = ảnh PNG phủ bản đồ (/api/render.png)          │ GeoTIFF
+                                                                ▼
+                                                       /data/outputs/...
 ```
 
 | Thành phần | Công nghệ | Vai trò |
 |---|---|---|
 | Frontend | [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) + Vite | Bản đồ, time slider, lớp ngập/mặn, cảnh báo vị trí |
 | Backend API | Node.js + Express | Dữ liệu thời gian thực, điều phối mô phỏng, sinh cảnh báo tiếng Việt |
-| Modeling | Python FastAPI | **HAND-FIM** (theo phương pháp [NOAA OWP](https://github.com/NOAA-OWP/inundation-mapping)) tính raster độ sâu ngập theo giờ; mô hình xâm nhập mặn 1D (Savenije) theo 8 nhánh sông chính |
-| Tile server | [TiTiler](https://github.com/developmentseed/titiler) | Phục vụ chuỗi raster ngập dạng tile động |
+| Modeling | Python FastAPI | **HAND-FIM** (theo phương pháp [NOAA OWP](https://github.com/NOAA-OWP/inundation-mapping)) tính raster độ sâu ngập theo giờ; mô hình xâm nhập mặn 1D (Savenije) theo 8 nhánh sông chính; render PNG phủ bản đồ (lưới ~275 m nên 1 ảnh toàn vùng tương đương tile động, không cần tile server) |
 | Kịch bản nặng | [Itzï](https://github.com/ItziModel/itzi) (offline) | Mô hình thủy động lực 2D, tính sẵn kịch bản (lũ 2011, SLR…) |
 
 ## Chạy nhanh (Docker, khuyến nghị)
@@ -53,11 +51,7 @@ DATA_DIR=../data uvicorn app:app --port 8000
 cd server && npm install
 MODEL_API_URL=http://localhost:8000 npm run dev
 
-# 3. TiTiler (cần cho hiển thị lớp ngập)
-docker run -p 8000:8000 -v $(pwd)/data:/data ghcr.io/developmentseed/titiler:latest
-#  (nếu chạy TiTiler cùng máy, đổi cổng modeling sang 8001 và chỉnh MODEL_API_URL)
-
-# 4. Client
+# 3. Client
 cd client && npm install && npm run dev   # http://localhost:5173
 ```
 
@@ -111,8 +105,8 @@ docker compose up -d --build
   sâu nhất ~110–130 km, Hàm Luông 75–90 km, Hậu/Tiền 55–65 km).
 - **Vùng ảnh hưởng mặn ven sông**: raster GeoTIFF tô màu dải đất dọc sông theo
   độ mặn — `S_cell = S_sông(điểm sông gần nhất) · exp(−d/8 km)`, cắt tại 15 km
-  (nước mặn theo kênh rạch lan vào nội đồng) — hiển thị qua TiTiler với thang
-  màu trùng thang độ mặn của lớp sông.
+  (nước mặn theo kênh rạch lan vào nội đồng) — hiển thị bằng ảnh PNG render
+  từ modeling (`/api/render.png`) với thang màu trùng thang độ mặn của lớp sông.
 - **Dự báo xâm nhập mặn**: `GET /api/salinity/forecast?days=N` — server tổng
   hợp tham số từng ngày (quy luật mùa chiếu tới ngày tương lai + dữ liệu thực
   đo khi có; đặt `KTTV_API_URL` để hiệu chỉnh theo trạm đo), modeling tính

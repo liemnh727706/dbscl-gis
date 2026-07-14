@@ -13,7 +13,7 @@ const state = {
   scenarios: [],
   forecast: null,         // ket qua du bao man nhieu ngay
   fcDay: 0,               // ngay dang xem trong du bao
-  zoneLevel: "commune",   // ranh gioi hanh chinh: off | province | commune
+  zoneLevel: "off",       // ranh gioi hanh chinh: off | province | commune
   zoneMetric: "flood",    // to mau ranh gioi theo: flood | salt
 };
 
@@ -42,37 +42,61 @@ map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }));
 window._map = map; // debug console
 
-// ===================== Lop raster ngap (TiTiler) =====================
-function floodTileUrl(t) {
-  const path = state.meta.tile_path_template.replace(
-    "{t:02d}", String(t).padStart(2, "0"));
-  const q = new URLSearchParams({
-    url: path, rescale: "0,3", colormap_name: "blues",
-  });
-  return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?${q.toString()}`;
+// ===================== Lop anh phu ket qua (render PNG) =====================
+// Anh PNG toan vung do modeling render (grid ~275 m nen tuong duong tile ve
+// chi tiet, khong can TiTiler). Goc anh theo BBOX luoi tinh (engine/terrain.py).
+const GRID_BOUNDS = [
+  [104.4, 11.3], [107.0, 11.3], [107.0, 8.4], [104.4, 8.4],
+];
+
+// Chuyen "/data/outputs/..." trong metadata -> tham so file cua /api/render.png
+const relOutput = (p) => p.replace(/^\/data\/outputs\//, "");
+
+function renderUrl(tifPath, style, bust = "") {
+  const q = new URLSearchParams({ file: relOutput(tifPath), style });
+  if (bust) q.set("v", bust);
+  return `/api/render.png?${q.toString()}`;
+}
+
+// Style san sang (da phan tich xong JSON) la du de addSource/addLayer -
+// KHONG cho isStyleLoaded() vi no doi ca tile nen OSM (mang cham/bi chan
+// se treo vinh vien). styledata ban ra ngay sau khi style noi tuyen duoc nap.
+let styleReady = false;
+map.on("styledata", () => { styleReady = true; });
+function whenStyleReady(fn) {
+  if (styleReady || map.isStyleLoaded()) fn();
+  else map.once("styledata", () => fn());
 }
 
 // Lop dau tien dang ton tai trong danh sach -> dung lam beforeId khi addLayer
 const firstLayer = (ids) => ids.find((id) => map.getLayer(id));
 const LAYER_ORDER_ABOVE_FLOOD = ["salt-zone", "zones-fill", "salt-segments"];
 
-function updateFloodLayer() {
-  if (!state.meta) return;
-  if (!map.isStyleLoaded()) { map.once("load", updateFloodLayer); return; }
-  const tiles = [floodTileUrl(state.t)];
-  const src = map.getSource("flood");
-  if (src && typeof src.setTiles === "function") {
-    src.setTiles(tiles);
+function upsertImageLayer(id, url, { opacity, beforeIds }) {
+  const src = map.getSource(id);
+  if (src && typeof src.updateImage === "function") {
+    src.updateImage({ url, coordinates: GRID_BOUNDS });
   } else {
-    if (map.getLayer("flood")) map.removeLayer("flood");
-    if (src) map.removeSource("flood");
-    map.addSource("flood", { type: "raster", tiles, tileSize: 256 });
+    if (map.getLayer(id)) map.removeLayer(id);
+    if (src) map.removeSource(id);
+    map.addSource(id, { type: "image", url, coordinates: GRID_BOUNDS });
     map.addLayer(
-      { id: "flood", type: "raster", source: "flood",
-        paint: { "raster-opacity": Number($("#p-opacity").value) } },
-      firstLayer(LAYER_ORDER_ABOVE_FLOOD),
+      { id, type: "raster", source: id,
+        paint: { "raster-opacity": opacity, "raster-fade-duration": 0 } },
+      firstLayer(beforeIds),
     );
   }
+}
+
+function updateFloodLayer() {
+  if (!state.meta) return;
+  if (!styleReady) { whenStyleReady(updateFloodLayer); return; }
+  const tif = state.meta.tile_path_template.replace(
+    "{t:02d}", String(state.t).padStart(2, "0"));
+  upsertImageLayer("flood", renderUrl(tif, "depth"), {
+    opacity: Number($("#p-opacity").value),
+    beforeIds: LAYER_ORDER_ABOVE_FLOOD,
+  });
   map.setLayoutProperty("flood", "visibility",
     $("#lyr-flood").checked ? "visible" : "none");
   updateTimeLabel();
@@ -142,7 +166,7 @@ const SALT_COLORS = [
 
 function updateSalinityLayers() {
   if (!state.salinity) return;
-  if (!map.isStyleLoaded()) { map.once("load", updateSalinityLayers); return; }
+  if (!styleReady) { whenStyleReady(updateSalinityLayers); return; }
   const seg = state.salinity.segments;
   const fronts = state.salinity.fronts;
   if (map.getSource("salt-segments")) {
@@ -185,38 +209,18 @@ function updateSalinityLayers() {
 }
 
 // ===================== Lop raster vung anh huong man =====================
-// To mau dai dat ven song theo do man (g/l) - cung thang mau voi duong song.
-const SALT_COLORMAP = JSON.stringify([
-  [[0.1, 0.5], [46, 125, 50, 130]],
-  [[0.5, 1.0], [158, 157, 36, 145]],
-  [[1.0, 4.0], [249, 168, 37, 160]],
-  [[4.0, 10.0], [239, 108, 0, 175]],
-  [[10.0, 20.0], [211, 47, 47, 185]],
-  [[20.0, 35.0], [123, 31, 162, 195]],
-]);
-
-function zoneTileUrl(tifPath) {
-  const q = new URLSearchParams({ url: tifPath, colormap: SALT_COLORMAP });
-  return `/tiles/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?${q.toString()}`;
-}
-
+// To mau dai dat ven song theo do man (g/l) - thang mau render o modeling
+// (engine/render.py, SALINITY_STEPS) trung voi mau duong song.
 function updateZoneLayer(tifPath) {
   if (!tifPath) return;
-  if (!map.isStyleLoaded()) { map.once("load", () => updateZoneLayer(tifPath)); return; }
-  const tiles = [zoneTileUrl(tifPath)];
-  const src = map.getSource("salt-zone");
-  if (src && typeof src.setTiles === "function") {
-    src.setTiles(tiles);
-  } else {
-    if (map.getLayer("salt-zone")) map.removeLayer("salt-zone");
-    if (src) map.removeSource("salt-zone");
-    map.addSource("salt-zone", { type: "raster", tiles, tileSize: 256 });
-    map.addLayer(
-      { id: "salt-zone", type: "raster", source: "salt-zone",
-        paint: { "raster-opacity": 0.8 } },
-      map.getLayer("salt-segments") ? "salt-segments" : undefined,
-    );
-  }
+  if (!styleReady) { whenStyleReady(() => updateZoneLayer(tifPath)); return; }
+  // zone_latest.tif bi ghi de moi lan chay -> them nhan thoi gian de khong
+  // dinh cache anh cu; file du bao co run_id rieng nen nhan rong cung on
+  const bust = state.forecast?.created || state.salinity?.created || "";
+  upsertImageLayer("salt-zone", renderUrl(tifPath, "salinity", bust), {
+    opacity: 0.8,
+    beforeIds: ["zones-fill", "salt-segments"],
+  });
   updateZoneVisibility();
 }
 
@@ -399,8 +403,7 @@ async function runSimulation() {
       updateZoneLayer(data.salinity?.zone_tile_path);
       loadZones();
     };
-    if (map.isStyleLoaded()) applyLayers();
-    else map.once("load", applyLayers);
+    whenStyleReady(applyLayers);
     const st = data.flood.stats?.[0];
     $("#run-status").textContent =
       `✅ Xong: ${data.flood.times.length} bước thời gian` +

@@ -21,23 +21,12 @@ services:
       - DATA_DIR=/data
     restart: unless-stopped
 
-  # TiTiler - dynamic raster tiles from COG time-series
-  titiler:
-    image: ghcr.io/developmentseed/titiler:latest
-    environment:
-      - TITILER_API_CORS_ORIGINS=*
-      - GDAL_CACHEMAX=200
-      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
-    volumes:
-      - ./data:/data:ro
-    restart: unless-stopped
-
-  # Frontend - MapLibre GL JS, served by nginx which also proxies api/tiles
+  # Frontend - MapLibre GL JS, served by nginx which also proxies /api
+  # (raster ngap/man do modeling render PNG truc tiep - khong can TiTiler)
   client:
     build: ./client
     ports:
       - "80:80"
     depends_on:
       - server
-      - titiler
     restart: unless-stopped
