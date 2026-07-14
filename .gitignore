@@ -8,3 +8,4 @@ data/dem/*.tif
 data/outputs/
 *.log
 .DS_Store
+data/static/zonegrid_*.npz
