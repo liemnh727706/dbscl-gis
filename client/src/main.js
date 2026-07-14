@@ -26,7 +26,8 @@ const map = new maplibregl.Map({
   zoom: 7.6,
   style: {
     version: 8,
-    glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+    // Font ho tro day du dau tieng Viet (da kiem tra range 7680-7935)
+    glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     sources: {
       osm: {
         type: "raster",
@@ -40,7 +41,108 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }));
+
+// Nut phong to toan canh Viet Nam & Bien Dong (thay Hoang Sa, Truong Sa)
+map.addControl({
+  onAdd() {
+    const div = document.createElement("div");
+    div.className = "maplibregl-ctrl maplibregl-ctrl-group";
+    const btn = document.createElement("button");
+    btn.textContent = "🇻🇳";
+    btn.title = "Toàn cảnh Việt Nam & Biển Đông (Hoàng Sa, Trường Sa)";
+    btn.onclick = () =>
+      map.fitBounds([[101.5, 7.0], [117.8, 17.8]], { padding: 20 });
+    div.appendChild(btn);
+    return div;
+  },
+  onRemove() {},
+}, "top-right");
 window._map = map; // debug console
+
+// Style san sang (da phan tich xong JSON) la du de addSource/addLayer -
+// KHONG cho isStyleLoaded() vi no doi ca tile nen OSM (mang cham/bi chan
+// se treo vinh vien). styledata ban ra ngay sau khi style noi tuyen duoc nap.
+let styleReady = false;
+map.on("styledata", () => { styleReady = true; });
+function whenStyleReady(fn) {
+  if (styleReady || map.isStyleLoaded()) fn();
+  else map.once("styledata", () => fn());
+}
+
+// ============ Dia danh Viet Nam: bien dao, quan dao ============
+// Nhan tieng Viet luon hien thi tren moi lop, theo the hien ban do Viet Nam:
+// quan dao Hoang Sa (TP. Da Nang), quan dao Truong Sa (tinh Khanh Hoa).
+const pt = (lon, lat, name, kind) => ({
+  type: "Feature",
+  geometry: { type: "Point", coordinates: [lon, lat] },
+  properties: { name, kind },
+});
+
+const VN_PLACES = {
+  type: "FeatureCollection",
+  features: [
+    pt(112.0, 16.40, "Quần đảo Hoàng Sa\n(TP. Đà Nẵng, Việt Nam)", "arch"),
+    pt(113.80, 9.60, "Quần đảo Trường Sa\n(Tỉnh Khánh Hòa, Việt Nam)", "arch"),
+    pt(110.30, 13.40, "BIỂN ĐÔNG", "sea"),
+    pt(102.75, 9.10, "VỊNH THÁI LAN", "sea"),
+    pt(103.96, 10.22, "Đảo Phú Quốc", "island"),
+    pt(106.60, 8.69, "Côn Đảo", "island"),
+    pt(104.83, 9.30, "Quần đảo Thổ Chu", "island"),
+    // Cham dao tuong trung de quan dao hien ro khi thu nho ban do
+    ...[[112.33, 16.83], [111.60, 16.53], [112.73, 16.66], [111.19, 15.78]]
+      .map(([x, y]) => pt(x, y, "", "islet")),           // Hoang Sa
+    ...[[111.92, 8.64], [114.33, 11.43], [114.32, 9.88], [114.37, 10.18],
+        [112.92, 7.87], [113.84, 10.37]]
+      .map(([x, y]) => pt(x, y, "", "islet")),           // Truong Sa
+  ],
+};
+
+function addVietnamLabels() {
+  if (map.getSource("vn-places")) return;
+  map.addSource("vn-places", { type: "geojson", data: VN_PLACES });
+  // Cham dao (lop duoi cung cua nhom nhan - cac lop khac chen ben duoi no)
+  map.addLayer({
+    id: "vn-islands", type: "circle", source: "vn-places",
+    filter: ["in", ["get", "kind"], ["literal", ["islet", "island"]]],
+    paint: {
+      "circle-radius": ["case", ["==", ["get", "kind"], "islet"], 2.5, 3.5],
+      "circle-color": "#c99b3f",
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": 1,
+    },
+  });
+  // Ten bien (chu hoa, xanh bien)
+  map.addLayer({
+    id: "vn-labels-sea", type: "symbol", source: "vn-places",
+    filter: ["==", ["get", "kind"], "sea"],
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["Noto Sans Bold"],
+      "text-size": 15, "text-letter-spacing": 0.25,
+    },
+    paint: {
+      "text-color": "#3573b9",
+      "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.5,
+    },
+  });
+  // Quan dao (dam, kem don vi hanh chinh) + dao
+  map.addLayer({
+    id: "vn-labels", type: "symbol", source: "vn-places",
+    filter: ["in", ["get", "kind"], ["literal", ["arch", "island"]]],
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["case", ["==", ["get", "kind"], "arch"],
+        ["literal", ["Noto Sans Bold"]], ["literal", ["Noto Sans Regular"]]],
+      "text-size": ["case", ["==", ["get", "kind"], "arch"], 13, 11.5],
+      "text-offset": [0, 0.8], "text-anchor": "top",
+      "text-allow-overlap": false,
+    },
+    paint: {
+      "text-color": "#1a3c5e",
+      "text-halo-color": "rgba(255,255,255,0.9)", "text-halo-width": 1.6,
+    },
+  });
+}
+whenStyleReady(addVietnamLabels);
 
 // ===================== Lop anh phu ket qua (render PNG) =====================
 // Anh PNG toan vung do modeling render (grid ~275 m nen tuong duong tile ve
@@ -58,19 +160,9 @@ function renderUrl(tifPath, style, bust = "") {
   return `/api/render.png?${q.toString()}`;
 }
 
-// Style san sang (da phan tich xong JSON) la du de addSource/addLayer -
-// KHONG cho isStyleLoaded() vi no doi ca tile nen OSM (mang cham/bi chan
-// se treo vinh vien). styledata ban ra ngay sau khi style noi tuyen duoc nap.
-let styleReady = false;
-map.on("styledata", () => { styleReady = true; });
-function whenStyleReady(fn) {
-  if (styleReady || map.isStyleLoaded()) fn();
-  else map.once("styledata", () => fn());
-}
-
 // Lop dau tien dang ton tai trong danh sach -> dung lam beforeId khi addLayer
 const firstLayer = (ids) => ids.find((id) => map.getLayer(id));
-const LAYER_ORDER_ABOVE_FLOOD = ["salt-zone", "zones-fill", "salt-segments"];
+const LAYER_ORDER_ABOVE_FLOOD = ["salt-zone", "zones-fill", "salt-segments", "vn-islands"];
 
 function upsertImageLayer(id, url, { opacity, beforeIds }) {
   const src = map.getSource(id);
@@ -115,11 +207,11 @@ async function loadZones() {
       map.addLayer({
         id: "zones-fill", type: "fill", source: "zones",
         paint: { "fill-opacity": 0.62 },
-      }, firstLayer(["salt-segments"]));
+      }, firstLayer(["salt-segments", "vn-islands"]));
       map.addLayer({
         id: "zones-line", type: "line", source: "zones",
         paint: { "line-color": "rgba(255,255,255,0.55)", "line-width": 0.6 },
-      }, firstLayer(["salt-segments"]));
+      }, firstLayer(["salt-segments", "vn-islands"]));
       map.on("click", "zones-fill", (e) => {
         const p = e.features[0].properties;
         const title = p.district
@@ -180,7 +272,7 @@ function updateSalinityLayers() {
         "line-width": 3.5,
         "line-color": ["interpolate", ["linear"], ["get", "salinity"], ...SALT_COLORS],
       },
-    });
+    }, firstLayer(["vn-islands"]));
     map.addSource("salt-fronts", { type: "geojson", data: fronts });
     map.addLayer({
       id: "salt-fronts", type: "circle", source: "salt-fronts",
@@ -189,7 +281,7 @@ function updateSalinityLayers() {
         "circle-radius": 6, "circle-color": "#d32f2f",
         "circle-stroke-color": "#fff", "circle-stroke-width": 2,
       },
-    });
+    }, firstLayer(["vn-islands"]));
     map.on("click", "salt-segments", (e) => {
       const p = e.features[0].properties;
       new maplibregl.Popup().setLngLat(e.lngLat)
@@ -219,7 +311,7 @@ function updateZoneLayer(tifPath) {
   const bust = state.forecast?.created || state.salinity?.created || "";
   upsertImageLayer("salt-zone", renderUrl(tifPath, "salinity", bust), {
     opacity: 0.8,
-    beforeIds: ["zones-fill", "salt-segments"],
+    beforeIds: ["zones-fill", "salt-segments", "vn-islands"],
   });
   updateZoneVisibility();
 }
