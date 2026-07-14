@@ -392,10 +392,15 @@ async function runSimulation() {
     state.salinity = data.salinity;
     state.t = 0;
     setupSlider();
-    updateFloodLayer();
-    updateSalinityLayers();
-    updateZoneLayer(data.salinity?.zone_tile_path);
-    loadZones();
+    // Gan lop len ban do; neu style chua nap xong (tile nen cham) thi cho
+    const applyLayers = () => {
+      updateFloodLayer();
+      updateSalinityLayers();
+      updateZoneLayer(data.salinity?.zone_tile_path);
+      loadZones();
+    };
+    if (map.isStyleLoaded()) applyLayers();
+    else map.once("load", applyLayers);
     const st = data.flood.stats?.[0];
     $("#run-status").textContent =
       `✅ Xong: ${data.flood.times.length} bước thời gian` +
@@ -586,11 +591,19 @@ map.on("click", (e) => {
 });
 
 // ===================== Khoi dong =====================
-map.on("load", async () => {
+let booted = false;
+async function boot() {
+  if (booted) return;
+  booted = true;
   loadStations();
   loadRealtime();
   loadScenarios();
   // Tu dong chay mo phong thoi gian thuc khi mo trang, roi tu xac dinh vi tri
   await runSimulation();
   locateUser(true);
-});
+}
+
+map.on("load", boot);
+// Du phong: ban do nen cham/bi chan thi van khoi dong phan du lieu;
+// cac lop ban do se duoc gan lai khi style san sang (xem runSimulation)
+setTimeout(() => { if (!booted) boot(); }, 8000);
