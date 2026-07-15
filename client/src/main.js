@@ -106,6 +106,14 @@ map.addControl({
 }, "top-right");
 window._map = map; // debug console
 
+// Nuot loi tai/giai ma tile khong nghiem trong (vd tile radar RainViewer rong
+// 0-byte khi vung khong co mua) de khong noi thong bao loi khi zoom/pan.
+map.on("error", (e) => {
+  const msg = String(e?.error?.message || "");
+  if (/tile|image|decode|zoom/i.test(msg)) return; // bo qua loi tile phu
+  console.warn("[map]", msg);
+});
+
 // Style san sang (da phan tich xong JSON) la du de addSource/addLayer -
 // KHONG cho isStyleLoaded() vi no doi ca tile nen OSM (mang cham/bi chan
 // se treo vinh vien). styledata ban ra ngay sau khi style noi tuyen duoc nap.
@@ -338,7 +346,13 @@ function showRadarFrame(i) {
   } else {
     if (map.getLayer("radar")) map.removeLayer("radar");
     if (src) map.removeSource("radar");
-    map.addSource("radar", { type: "raster", tiles: [url], tileSize: RADAR_TILE });
+    // maxzoom=12: radar tong hop chi phan giai ~1 km (~z10-12). Dat maxzoom
+    // de MapLibre KEO GIAN tile z12 khi zoom sau hon, thay vi request tile
+    // z13+ (RainViewer tra PNG rong 0-byte gay loi giai ma anh khi zoom).
+    map.addSource("radar", {
+      type: "raster", tiles: [url], tileSize: RADAR_TILE,
+      minzoom: 0, maxzoom: 12,
+    });
     // Radar la lop thoi tiet truc tiep -> dat tren cung (duoi nhan dia danh)
     map.addLayer({
       id: "radar", type: "raster", source: "radar",
