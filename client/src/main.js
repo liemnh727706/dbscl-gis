@@ -19,25 +19,64 @@ const state = {
 
 const $ = (sel) => document.querySelector(sel);
 
+// ===================== Style ban do nen =====================
+// Nen vector OpenFreeMap (lieu du OpenMapTiles) de kiem soat NHAN hoan toan:
+// - Uu tien ten tieng Viet (name:vi) cho moi nhan; khong ghep ten phi Latin
+// - BO nhan bien/dai duong cua style goc (South China Sea...) va nhan dao
+//   goc (island/islet/archipelago) -> thay bang bo nhan tieng Viet rieng
+//   (VN_PLACES ben duoi), dam bao dao/quan dao CHI mang ten Viet Nam.
+// Nen raster OSM cu khong lam duoc viec nay vi nhan ve san trong anh tile.
+const OSM_RASTER_FALLBACK = {
+  version: 8,
+  // Font ho tro day du dau tieng Viet (da kiem tra range 7680-7935)
+  glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
+
+function vietnamizeStyle(style) {
+  const NAME_VI = ["coalesce",
+    ["get", "name:vi"], ["get", "name:latin"], ["get", "name"]];
+  // Bo toan bo nhan ten bien/song ho dang diem cua style goc
+  style.layers = style.layers.filter((l) => l["source-layer"] !== "water_name");
+  for (const l of style.layers) {
+    if (!l.layout || !l.layout["text-field"]) continue;
+    l.layout["text-field"] = NAME_VI;
+    // label_other gom cac place ngoai city/town/village... -> loai dao
+    if (l.id === "label_other")
+      l.filter = ["all", l.filter,
+        ["match", ["get", "class"],
+          ["island", "islet", "archipelago"], false, true]];
+  }
+  return style;
+}
+
+async function buildStyle() {
+  try {
+    const res = await fetch("https://tiles.openfreemap.org/styles/liberty");
+    if (!res.ok) throw new Error(`style ${res.status}`);
+    return vietnamizeStyle(await res.json());
+  } catch {
+    return OSM_RASTER_FALLBACK; // mat mang -> van chay duoc voi nen raster
+  }
+}
+
+const BASE_STYLE = await buildStyle();
+window._baseStyle = BASE_STYLE; // debug console
+
 // ===================== Khoi tao ban do =====================
 const map = new maplibregl.Map({
   container: "map",
   center: [105.95, 10.05],  // DBSCL + luu vuc Sai Gon - Dong Nai
   zoom: 7.3,
-  style: {
-    version: 8,
-    // Font ho tro day du dau tieng Viet (da kiem tra range 7680-7935)
-    glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    sources: {
-      osm: {
-        type: "raster",
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution: "© OpenStreetMap contributors",
-      },
-    },
-    layers: [{ id: "osm", type: "raster", source: "osm" }],
-  },
+  style: BASE_STYLE,
 });
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }));
@@ -81,19 +120,44 @@ const pt = (lon, lat, name, kind) => ({
 const VN_PLACES = {
   type: "FeatureCollection",
   features: [
-    pt(112.0, 16.40, "Quần đảo Hoàng Sa\n(TP. Đà Nẵng, Việt Nam)", "arch"),
-    pt(113.80, 9.60, "Quần đảo Trường Sa\n(Tỉnh Khánh Hòa, Việt Nam)", "arch"),
+    // ----- Bien -----
     pt(110.30, 13.40, "BIỂN ĐÔNG", "sea"),
     pt(102.75, 9.10, "VỊNH THÁI LAN", "sea"),
+    // ----- Quan dao lon (luon hien) -----
+    pt(112.0, 16.40, "Quần đảo Hoàng Sa\n(TP. Đà Nẵng, Việt Nam)", "arch"),
+    pt(113.80, 9.60, "Quần đảo Trường Sa\n(Tỉnh Khánh Hòa, Việt Nam)", "arch"),
+    // ----- Dao ven bo (hien tu mot muc zoom vua) -----
     pt(103.96, 10.22, "Đảo Phú Quốc", "island"),
     pt(106.60, 8.69, "Côn Đảo", "island"),
-    pt(104.83, 9.30, "Quần đảo Thổ Chu", "island"),
-    // Cham dao tuong trung de quan dao hien ro khi thu nho ban do
-    ...[[112.33, 16.83], [111.60, 16.53], [112.73, 16.66], [111.19, 15.78]]
-      .map(([x, y]) => pt(x, y, "", "islet")),           // Hoang Sa
-    ...[[111.92, 8.64], [114.33, 11.43], [114.32, 9.88], [114.37, 10.18],
-        [112.92, 7.87], [113.84, 10.37]]
-      .map(([x, y]) => pt(x, y, "", "islet")),           // Truong Sa
+    pt(103.48, 9.30, "Quần đảo Thổ Chu", "island"),
+    pt(104.35, 9.68, "Quần đảo Nam Du", "island"),
+    pt(104.63, 9.80, "Hòn Sơn (Lại Sơn)", "island"),
+    pt(104.85, 9.97, "Hòn Tre (Kiên Hải)", "island"),
+    pt(104.58, 10.18, "Quần đảo Bà Lụa", "island"),
+    pt(104.33, 10.32, "Quần đảo Hải Tặc", "island"),
+    pt(104.83, 8.43, "Hòn Khoai", "island"),
+    pt(104.50, 8.95, "Hòn Chuối", "island"),
+    pt(108.93, 10.52, "Đảo Phú Quý", "island"),
+    pt(109.30, 12.22, "Đảo Hòn Tre (Nha Trang)", "island"),
+    pt(109.35, 13.61, "Cù Lao Xanh", "island"),
+    pt(109.11, 15.38, "Đảo Lý Sơn", "island"),
+    pt(108.51, 15.95, "Cù Lao Chàm", "island"),
+    pt(107.34, 17.16, "Đảo Cồn Cỏ", "island"),
+    // ----- Cac dao thuoc quan dao Hoang Sa -----
+    pt(112.33, 16.84, "Đảo Phú Lâm", "isle"),
+    pt(111.61, 16.53, "Đảo Hoàng Sa", "isle"),
+    pt(112.73, 16.66, "Đảo Linh Côn", "isle"),
+    pt(111.19, 15.78, "Đảo Tri Tôn", "isle"),
+    pt(111.51, 16.45, "Đảo Quang Ảnh", "isle"),
+    // ----- Cac dao/da thuoc quan dao Truong Sa -----
+    pt(111.92, 8.64, "Đảo Trường Sa (Trường Sa Lớn)", "isle"),
+    pt(114.33, 11.43, "Đảo Song Tử Tây", "isle"),
+    pt(114.32, 9.88, "Đảo Sinh Tồn", "isle"),
+    pt(114.37, 10.18, "Đảo Nam Yết", "isle"),
+    pt(114.47, 10.37, "Đảo Sơn Ca", "isle"),
+    pt(112.92, 7.87, "Đảo An Bang", "isle"),
+    pt(112.88, 9.55, "Đá Chữ Thập", "isle"),
+    pt(113.85, 10.05, "Đá Lớn", "isle"),
   ],
 };
 
@@ -103,9 +167,9 @@ function addVietnamLabels() {
   // Cham dao (lop duoi cung cua nhom nhan - cac lop khac chen ben duoi no)
   map.addLayer({
     id: "vn-islands", type: "circle", source: "vn-places",
-    filter: ["in", ["get", "kind"], ["literal", ["islet", "island"]]],
+    filter: ["in", ["get", "kind"], ["literal", ["isle", "island"]]],
     paint: {
-      "circle-radius": ["case", ["==", ["get", "kind"], "islet"], 2.5, 3.5],
+      "circle-radius": ["case", ["==", ["get", "kind"], "isle"], 2.5, 3.5],
       "circle-color": "#c99b3f",
       "circle-stroke-color": "#ffffff", "circle-stroke-width": 1,
     },
@@ -124,7 +188,7 @@ function addVietnamLabels() {
       "text-halo-color": "rgba(255,255,255,0.85)", "text-halo-width": 1.5,
     },
   });
-  // Quan dao (dam, kem don vi hanh chinh) + dao
+  // Quan dao (dam, kem don vi hanh chinh) + dao ven bo
   map.addLayer({
     id: "vn-labels", type: "symbol", source: "vn-places",
     filter: ["in", ["get", "kind"], ["literal", ["arch", "island"]]],
@@ -139,6 +203,23 @@ function addVietnamLabels() {
     paint: {
       "text-color": "#1a3c5e",
       "text-halo-color": "rgba(255,255,255,0.9)", "text-halo-width": 1.6,
+    },
+  });
+  // Tung dao/da thuoc Hoang Sa, Truong Sa - hien khi phong to vao quan dao
+  map.addLayer({
+    id: "vn-labels-isle", type: "symbol", source: "vn-places",
+    filter: ["==", ["get", "kind"], "isle"],
+    minzoom: 6,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["literal", ["Noto Sans Regular"]],
+      "text-size": 10.5,
+      "text-offset": [0, 0.7], "text-anchor": "top",
+      "text-allow-overlap": false,
+    },
+    paint: {
+      "text-color": "#1a3c5e",
+      "text-halo-color": "rgba(255,255,255,0.9)", "text-halo-width": 1.5,
     },
   });
 }
