@@ -79,6 +79,7 @@ ngay độ chính xác DEM thật mà không phải tải lại (~430 MB ô gố
 | Nguồn | Dữ liệu | Trạng thái |
 |---|---|---|
 | Open-Meteo | Mưa dự báo 6 điểm ĐBSCL | ✅ hoạt động, không cần key |
+| RainViewer | Ảnh radar mưa tổng hợp (gồm mạng radar KTTV Việt Nam), cập nhật ~10 phút/lần + ngoại suy 30–60′ | ✅ hoạt động, không cần key — lớp phủ động trên bản đồ, có hoạt ảnh theo thời gian |
 | Quy luật mùa (synthetic) | Q thượng nguồn, biên độ triều, chu kỳ triều cường | ✅ luôn hoạt động (nền/fallback) |
 | MRC Mekong | Mực nước sông Mekong (telemetry 15 phút: Tân Châu, Châu Đốc, Cần Thơ, Mỹ Thuận, Kratie…) | ✅ hoạt động, không cần key — hệ số dòng chảy Q suy từ mực nước thực đo; đổi endpoint bằng `MRC_API_URL` |
 | KTTV Việt Nam | Mực nước + độ mặn trạm đo | ⚙️ cần nguồn truy cập: đặt `KTTV_API_URL`, `KTTV_API_KEY` và chỉnh `server/src/providers/kttv.js` |

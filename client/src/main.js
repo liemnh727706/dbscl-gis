@@ -15,6 +15,14 @@ const state = {
   fcDay: 0,               // ngay dang xem trong du bao
   zoneLevel: "off",       // ranh gioi hanh chinh: off | province | commune
   zoneMetric: "flood",    // to mau ranh gioi theo: flood | salt
+  radar: {                // lop anh radar mua RainViewer
+    host: null,
+    frames: [],           // [{time, path, kind:"past"|"nowcast"}]
+    i: 0,                 // frame dang hien
+    playing: false,
+    timer: null,
+    refreshTimer: null,
+  },
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -259,6 +267,124 @@ function upsertImageLayer(id, url, { opacity, beforeIds }) {
       firstLayer(beforeIds),
     );
   }
+}
+
+// ===================== Lop radar mua RainViewer =====================
+// Anh radar tong hop toan cau cua RainViewer (bao gom mang radar khi tuong
+// Viet Nam), cap nhat ~10 phut/lan. Metadata: weather-maps.json liet ke cac
+// khung "past" (da qua, ~2h) va "nowcast" (du bao ngoai suy 30-60'). Moi khung
+// la mot bo tile PNG dong: {host}{path}/{size}/{z}/{x}/{y}/{color}/{opts}.png
+const RADAR_API = "https://api.rainviewer.com/public/weather-maps.json";
+const RADAR_COLOR = 4;   // bang mau "Universal Blue" - mua ro tren nen sang
+const RADAR_TILE = 256;
+
+function radarTileUrl(frame) {
+  // smooth=1, snow=1: anh muot va tach tuyet; color 4 = universal blue
+  return `${state.radar.host}${frame.path}/${RADAR_TILE}/{z}/{x}/{y}/${RADAR_COLOR}/1_1.png`;
+}
+
+async function loadRadar(auto = false) {
+  try {
+    const d = await (await fetch(RADAR_API)).json();
+    state.radar.host = d.host;
+    const past = (d.radar?.past || []).map((f) => ({ ...f, kind: "past" }));
+    const now = (d.radar?.nowcast || []).map((f) => ({ ...f, kind: "nowcast" }));
+    state.radar.frames = [...past, ...now];
+    if (!state.radar.frames.length) throw new Error("khong co khung radar");
+    const sl = $("#radar-slider");
+    sl.max = state.radar.frames.length - 1;
+    // Mac dinh dung o khung moi nhat da quan trac (cuoi danh sach "past")
+    state.radar.i = Math.max(0, past.length - 1);
+    sl.value = state.radar.i;
+    if ($("#lyr-radar").checked) showRadarFrame(state.radar.i);
+    else updateRadarTimeLabel();
+    // Tu lam moi metadata moi 5 phut (nguon cap ~10')
+    clearInterval(state.radar.refreshTimer);
+    state.radar.refreshTimer = setInterval(() => loadRadar(true), 5 * 60 * 1000);
+  } catch (e) {
+    if (!auto) $("#radar-time").textContent = `Không tải được radar: ${e.message}`;
+  }
+}
+
+function updateRadarTimeLabel() {
+  const f = state.radar.frames[state.radar.i];
+  if (!f) return;
+  const t = new Date(f.time * 1000).toLocaleString("vi-VN", {
+    hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+  const tag = f.kind === "nowcast"
+    ? `<b style="color:#ce93d8">DỰ BÁO</b> ${t}`
+    : (state.radar.i === lastPastIndex()
+        ? `<b style="color:#81c784">MỚI NHẤT</b> ${t}`
+        : `Quan trắc ${t}`);
+  $("#radar-time").innerHTML = tag;
+}
+
+function lastPastIndex() {
+  const arr = state.radar.frames;
+  for (let i = arr.length - 1; i >= 0; i--) if (arr[i].kind === "past") return i;
+  return arr.length - 1;
+}
+
+function showRadarFrame(i) {
+  if (!styleReady) { whenStyleReady(() => showRadarFrame(i)); return; }
+  const f = state.radar.frames[i];
+  if (!f) return;
+  state.radar.i = i;
+  $("#radar-slider").value = i;
+  const url = radarTileUrl(f);
+  const src = map.getSource("radar");
+  if (src && typeof src.setTiles === "function") {
+    src.setTiles([url]);
+  } else {
+    if (map.getLayer("radar")) map.removeLayer("radar");
+    if (src) map.removeSource("radar");
+    map.addSource("radar", { type: "raster", tiles: [url], tileSize: RADAR_TILE });
+    // Radar la lop thoi tiet truc tiep -> dat tren cung (duoi nhan dia danh)
+    map.addLayer({
+      id: "radar", type: "raster", source: "radar",
+      paint: {
+        "raster-opacity": Number($("#radar-opacity").value),
+        "raster-fade-duration": 0,
+      },
+    }, firstLayer(["vn-labels-sea", "vn-labels"]));
+  }
+  map.setLayoutProperty("radar", "visibility",
+    $("#lyr-radar").checked ? "visible" : "none");
+  updateRadarTimeLabel();
+}
+
+function toggleRadar(on) {
+  $("#radar-panel").classList.toggle("hidden", !on);
+  if (on) {
+    if (!state.radar.frames.length) loadRadar();
+    else showRadarFrame(state.radar.i);
+  } else {
+    stopRadarAnim();
+    if (map.getLayer("radar"))
+      map.setLayoutProperty("radar", "visibility", "none");
+  }
+}
+
+function stopRadarAnim() {
+  state.radar.playing = false;
+  clearTimeout(state.radar.timer);
+  const b = $("#radar-play"); if (b) b.textContent = "▶";
+}
+
+function toggleRadarAnim() {
+  state.radar.playing = !state.radar.playing;
+  $("#radar-play").textContent = state.radar.playing ? "⏸" : "▶";
+  clearTimeout(state.radar.timer);
+  if (state.radar.playing) tickRadar();
+}
+
+function tickRadar() {
+  const n = state.radar.frames.length;
+  const next = (state.radar.i + 1) % n;
+  showRadarFrame(next);
+  // Nghi lau hon o khung cuoi cung (du bao xa nhat) truoc khi lap lai
+  const delay = next === n - 1 ? 1400 : 500;
+  state.radar.timer = setTimeout(tickRadar, delay);
 }
 
 function updateFloodLayer() {
@@ -785,6 +911,18 @@ $("#lyr-flood").addEventListener("change", updateFloodLayer);
 $("#lyr-salt").addEventListener("change", updateSalinityLayers);
 $("#lyr-salt-zone").addEventListener("change", updateZoneVisibility);
 
+// ---- Radar mua RainViewer
+$("#lyr-radar").addEventListener("change", (e) => toggleRadar(e.target.checked));
+$("#radar-slider").addEventListener("input", (e) => {
+  stopRadarAnim();
+  showRadarFrame(Number(e.target.value));
+});
+$("#radar-play").addEventListener("click", toggleRadarAnim);
+$("#radar-opacity").addEventListener("input", (e) => {
+  if (map.getLayer("radar"))
+    map.setPaintProperty("radar", "raster-opacity", Number(e.target.value));
+});
+
 $("#btn-forecast").addEventListener("click", runForecast);
 $("#fc-day").addEventListener("input", (e) =>
   applyForecastDay(Number(e.target.value)));
@@ -814,6 +952,7 @@ async function boot() {
   loadStations();
   loadRealtime();
   loadScenarios();
+  loadRadar(true);   // tai truoc metadata radar (lop tat mac dinh)
   // Tu dong chay mo phong thoi gian thuc khi mo trang, roi tu xac dinh vi tri
   await runSimulation();
   locateUser(true);

@@ -46,6 +46,17 @@ button.primary:disabled { background: #45607a; cursor: wait; }
 .legend-bar.flood { background: linear-gradient(90deg, rgba(222,235,247,.9), #6baed6, #2171b5, #08306b); }
 .legend-bar.salt { background: linear-gradient(90deg, #2e7d32, #f9a825, #ef6c00, #d32f2f, #7b1fa2); }
 .legend-bar.zone-flood { background: linear-gradient(90deg, rgba(255,255,255,.15), #c6dbef, #6baed6, #2171b5, #08306b); }
+/* RainViewer "Universal Blue" (color 4): xanh nhat -> xanh -> vang -> do */
+.legend-bar.radar { background: linear-gradient(90deg, #cfe8ff, #4a90e2, #2b5cff, #26c281, #f4d03f, #e67e22, #e74c3c); }
+
+/* ---------- Radar mua ---------- */
+.radar-controls { display: flex; align-items: center; gap: 8px; margin: 8px 0 2px; }
+.radar-controls input[type="range"] { flex: 1; }
+#radar-play {
+  width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer;
+  background: #1976d2; color: #fff; font-size: 12px; flex: none;
+}
+#radar-time { min-height: 16px; }
 .metric-row { font-size: 12.5px; margin: 6px 0; }
 .metric-row label { margin-left: 8px; cursor: pointer; }
 .legend-scale { display: flex; justify-content: space-between; color: #90a4b8; }
