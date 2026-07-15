@@ -654,9 +654,19 @@ async function loadRealtime() {
   try {
     const rt = await (await fetch("/api/realtime")).json();
     const p = rt.derived_params;
+    const st = rt.mrc?.stations || {};
+    const mrcLine = st.tan_chau || st.chau_doc
+      ? `Mực nước MRC:` +
+        (st.tan_chau ? ` Tân Châu <b>${st.tan_chau.wl_m} m</b>` : "") +
+        (st.chau_doc ? ` · Châu Đốc <b>${st.chau_doc.wl_m} m</b>` : "") +
+        `<br/>`
+      : "";
     $("#rt-summary").innerHTML =
       `<b>${rt.seasonal.season.toUpperCase()}</b><br/>` +
-      `Dòng chảy thượng nguồn: <b>${p.q_factor}×</b> · Biên độ triều: <b>${p.tide_amp_m} m</b><br/>` +
+      `Dòng chảy thượng nguồn: <b>${p.q_factor}×</b>` +
+      (p.q_factor_source === "mrc" ? ` <span style="font-size:10.5px;color:#81c784">(theo mực nước thực đo)</span>` : "") +
+      ` · Biên độ triều: <b>${p.tide_amp_m} m</b><br/>` +
+      mrcLine +
       `Mưa dự báo hôm nay (Open-Meteo): <b>${p.rain_mm_day} mm</b><br/>` +
       `<span style="font-size:11px">Nguồn: ${rt.sources_used.join(", ")}</span>`;
   } catch {
