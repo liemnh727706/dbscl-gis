@@ -37,6 +37,16 @@ LATERAL_KM = 8.0    # suy giam ngang khi xa song (vung anh huong ven song)
 ZONE_MAX_KM = 15.0  # ngoai khoang cach nay coi nhu khong anh huong truc tiep
 S_MIN = 0.1         # duoi nguong nay coi nhu ngot (nodata tren raster)
 
+# Danh muc 115 tram do man noi dong DBSCL (Cuc Thuy loi - CSDL/DWH), tai bang
+# scripts/fetch_salinity_stations.py. Dung cho tinh nang du bao man toi tram
+# va hien thi tram tren ban do. Neu thieu file -> fallback STATIONS (rivers.py).
+_STATIONS_FILE = os.path.join(os.path.dirname(__file__), "stations_scl.json")
+if os.path.exists(_STATIONS_FILE):
+    with open(_STATIONS_FILE, encoding="utf-8") as _f:
+        SAL_STATIONS = json.load(_f)
+else:
+    SAL_STATIONS = [s for s in STATIONS if s.get("type") in ("salinity", "both")]
+
 
 def intrusion_length(q_factor: float, slr_m: float, tide_amp_m: float) -> float:
     """Chieu dai e-fold chung L (km); L tung song = L * l_factor."""
@@ -186,21 +196,67 @@ def compute_salinity(params: dict, data_dir: str, terrain=None) -> dict:
 
 
 # ------------------------------------------------------------------- du bao
+_RIVER_PTS = None      # cache polyline day cua tung song
+_STATION_CHAIN = None  # cache ket qua gan tram -> song
+
+
+def _river_points_cache():
+    global _RIVER_PTS
+    if _RIVER_PTS is None:
+        _RIVER_PTS = {k: _densify(r["points"], seg_km=0.5)
+                      for k, r in RIVERS.items()}
+    return _RIVER_PTS
+
+
+def _assign_river(lon, lat):
+    """Gan diem (lon,lat) vao SONG GAN NHAT trong 8 nhanh chinh.
+    Tra ve (river_key, chainage_km tu cua song, off_river_km)."""
+    best = None
+    coslat = np.cos(np.radians(lat))
+    for key, pts in _river_points_cache().items():
+        for x, y, c in pts:
+            d2 = ((x - lon) * KM_PER_DEG_LAT * coslat) ** 2 \
+                + ((y - lat) * KM_PER_DEG_LAT) ** 2
+            if best is None or d2 < best[0]:
+                best = (d2, key, c)
+    if best is None:
+        return None
+    return best[1], round(best[2], 1), round(float(np.sqrt(best[0])), 1)
+
+
 def _station_chainage():
-    """Chainage (km tu cua song) cua cac tram do man, tinh tren polyline."""
+    """Voi moi tram do man: gan song gan nhat + chainage + khoang cach ngoai
+    song. Cache lai (tram va hinh hoc song deu tinh)."""
+    global _STATION_CHAIN
+    if _STATION_CHAIN is not None:
+        return _STATION_CHAIN
     out = {}
-    for st in STATIONS:
-        if st.get("type") not in ("salinity", "both"):
+    for st in SAL_STATIONS:
+        a = _assign_river(st["lon"], st["lat"])
+        if a is None:
             continue
-        river = RIVERS.get(st["river"])
-        if not river:
-            continue
-        pts = _densify(river["points"], seg_km=1.0)
-        d2 = [((x - st["lon"]) * KM_PER_DEG_LAT * 0.97) ** 2
-              + ((y - st["lat"]) * KM_PER_DEG_LAT) ** 2 for x, y, _ in pts]
-        i = int(np.argmin(d2))
-        out[st["id"]] = {"station": st, "chainage_km": round(pts[i][2], 1),
-                         "off_river_km": round(float(np.sqrt(d2[i])), 1)}
+        rkey, chain, off = a
+        out[st["id"]] = {"station": st, "river_key": rkey,
+                         "chainage_km": chain, "off_river_km": off}
+    _STATION_CHAIN = out
+    return out
+
+
+def station_catalog():
+    """Danh muc tram do man (115 tram DBSCL) kem song gan nhat + chainage,
+    cho hien thi tren ban do (/stations)."""
+    out = []
+    for sid, info in _station_chainage().items():
+        st = info["station"]
+        out.append({
+            "id": sid, "name": st.get("name"),
+            "lat": st["lat"], "lon": st["lon"], "type": "salinity",
+            "river": RIVERS[info["river_key"]]["name"],
+            "chainage_km": info["chainage_km"],
+            "off_river_km": info["off_river_km"],
+            "subregion": st.get("subregion"),
+            "source": st.get("source", "thuyloi-dwh"),
+        })
     return out
 
 
@@ -241,17 +297,21 @@ def compute_forecast(days: list[dict], data_dir: str, terrain=None) -> dict:
         if seg_features is None:
             seg_features = _segments_features(Lr)  # hinh hoc + chainage ngay 0
 
-    # Uoc tinh ngay ranh man cham tung tram do man
+    # Uoc tinh ngay ranh man cham tung tram do man. Do man tai tram =
+    # S_song(chainage) * suy giam ngang exp(-off_river/LATERAL_KM) - nhat quan
+    # voi raster vung anh huong va sample_salinity.
     stations = []
     st_chain = _station_chainage()
     for sid, info in st_chain.items():
         chain = info["chainage_km"]
-        rkey = info["station"]["river"]
+        off = info["off_river_km"]
+        rkey = info["river_key"]
+        lateral = float(np.exp(-off / LATERAL_KM))
         series = []
         arrival4 = arrival1 = None
-        for i, entry in enumerate(timeline):
+        for entry in timeline:
             Lr_day = entry["l_by_river_km"].get(rkey, L0_KM)
-            s = S_SEA * float(np.exp(-chain / Lr_day))
+            s = S_SEA * float(np.exp(-chain / Lr_day)) * lateral
             series.append(round(s, 2))
             date = entry["date"]
             if arrival4 is None and s >= 4.0:
@@ -261,10 +321,14 @@ def compute_forecast(days: list[dict], data_dir: str, terrain=None) -> dict:
         stations.append({
             "id": sid, "name": info["station"]["name"],
             "river": RIVERS[rkey]["name"], "chainage_km": chain,
+            "off_river_km": off,
+            "lat": info["station"]["lat"], "lon": info["station"]["lon"],
             "salinity_gl_by_day": series,
             "first_day_over_4gl": arrival4,
             "first_day_over_1gl": arrival1,
         })
+    # Sap xep theo do man ngay 0 giam dan (tram man nhat len dau)
+    stations.sort(key=lambda s: -(s["salinity_gl_by_day"][0] if s["salinity_gl_by_day"] else 0))
 
     meta = {
         "type": "salinity_forecast", "run_id": run_id,

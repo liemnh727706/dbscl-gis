@@ -1,0 +1,1037 @@
+[
+{
+"id": "H01.KTTV.MN001",
+"name": "7T",
+"lat": 10.51,
+"lon": 104.87,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN002",
+"name": "Châu Đốc",
+"lat": 10.70525,
+"lon": 105.13366,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN003",
+"name": "Chợ Mới",
+"lat": 10.54,
+"lon": 105.46,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN004",
+"name": "Khánh An",
+"lat": 10.955,
+"lon": 105.085,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN005",
+"name": "Long Xuyên",
+"lat": 10.39322,
+"lon": 105.43501,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN006",
+"name": "Núi Sập",
+"lat": 10.27667,
+"lon": 105.26667,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN007",
+"name": "Tân Châu",
+"lat": 10.80047,
+"lon": 105.2479,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN008",
+"name": "Tri Tôn",
+"lat": 10.43647,
+"lon": 105.05543,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN009",
+"name": "Vàm Nao",
+"lat": 10.57868,
+"lon": 105.36343,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H01.KTTV.MN010",
+"name": "Xuân Tô",
+"lat": 10.60679,
+"lon": 104.94451,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN001",
+"name": "13M",
+"lat": 9.25,
+"lon": 105.26,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN002",
+"name": "5M",
+"lat": 9.27,
+"lon": 105.72,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN003",
+"name": "6M",
+"lat": 9.2,
+"lon": 105.33,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN004",
+"name": "Phước Long",
+"lat": 9.43487,
+"lon": 105.45783,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN005",
+"name": "VB3",
+"lat": 9.2801,
+"lon": 105.72335,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H04.KTTV.MN006",
+"name": "VB4",
+"lat": 9.22204,
+"lon": 105.42376,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN001",
+"name": "1M",
+"lat": 10.13,
+"lon": 106.66,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN002",
+"name": "9G",
+"lat": 10.26,
+"lon": 106.44,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN003",
+"name": "An Thuận",
+"lat": 9.9802,
+"lon": 106.60195,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN004",
+"name": "Bến Trại",
+"lat": 9.88674,
+"lon": 106.52525,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN005",
+"name": "Bình Đại",
+"lat": 10.20406,
+"lon": 106.70561,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN006",
+"name": "Chợ Lách",
+"lat": 10.28083,
+"lon": 106.11926,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN007",
+"name": "G1",
+"lat": 10.26758,
+"lon": 106.43784,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN008",
+"name": "Mỹ Hóa",
+"lat": 10.2225,
+"lon": 106.34919,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H07.KTTV.MN009",
+"name": "Sơn Đốc",
+"lat": 10.05,
+"lon": 106.45,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN001",
+"name": "10M",
+"lat": 9.35,
+"lon": 105.09,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN002",
+"name": "11M",
+"lat": 9.55,
+"lon": 104.97,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN003",
+"name": "8M",
+"lat": 9.23,
+"lon": 105.08,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN004",
+"name": "Cà Mau",
+"lat": 9.17766,
+"lon": 105.1484,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN005",
+"name": "Gành Hào",
+"lat": 9.04,
+"lon": 105.41,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN006",
+"name": "Năm Căn",
+"lat": 8.76297,
+"lon": 105.00499,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN007",
+"name": "Sông Đốc",
+"lat": 9.0406,
+"lon": 104.86286,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H12.KTTV.MN008",
+"name": "VB5",
+"lat": 9.34672,
+"lon": 105.09235,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H13.KTTV.MN001",
+"name": "1G",
+"lat": 10.26,
+"lon": 105.53,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H13.KTTV.MN002",
+"name": "2G",
+"lat": 10.07,
+"lon": 105.56,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H13.KTTV.MN003",
+"name": "Cần Thơ",
+"lat": 10.05276,
+"lon": 105.78719,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H13.KTTV.MN004",
+"name": "Cờ Đỏ",
+"lat": 10.09,
+"lon": 105.42167,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H13.KTTV.MN005",
+"name": "Ô Môn",
+"lat": 10.11167,
+"lon": 105.61667,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN001",
+"name": "1T",
+"lat": 10.81,
+"lon": 105.36,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN002",
+"name": "2T",
+"lat": 10.91,
+"lon": 105.53,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN003",
+"name": "3T",
+"lat": 10.67,
+"lon": 105.57,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN004",
+"name": "5T",
+"lat": 10.53,
+"lon": 105.84,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN005",
+"name": "An Long",
+"lat": 10.7,
+"lon": 105.37833,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN006",
+"name": "Cao Lãnh",
+"lat": 10.41657,
+"lon": 105.64429,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN007",
+"name": "Dinh Bà",
+"lat": 10.96667,
+"lon": 105.42333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN008",
+"name": "Hưng Thạnh",
+"lat": 10.66,
+"lon": 105.76,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN009",
+"name": "Lai Vung",
+"lat": 10.28833,
+"lon": 105.65667,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN010",
+"name": "Mỹ An",
+"lat": 10.52333,
+"lon": 105.84333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN011",
+"name": "T.Thới Hậu A",
+"lat": 10.88167,
+"lon": 105.29333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN012",
+"name": "Tân Công Sính",
+"lat": 10.74833,
+"lon": 105.62167,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN013",
+"name": "Tân Hồng",
+"lat": 10.90167,
+"lon": 105.52,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H20.KTTV.MN014",
+"name": "Trường Xuân",
+"lat": 10.65963,
+"lon": 105.77916,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H30.KTTV.MN001",
+"name": "Phụng Hiệp",
+"lat": 9.81185,
+"lon": 105.82348,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H30.KTTV.MN002",
+"name": "Vị Thanh",
+"lat": 9.77623,
+"lon": 105.45848,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN003",
+"name": "12M",
+"lat": 9.86,
+"lon": 105.11,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN004",
+"name": "14M",
+"lat": 10.29,
+"lon": 104.66,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN005",
+"name": "3G",
+"lat": 10.04,
+"lon": 105.4,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN006",
+"name": "7M",
+"lat": 9.76,
+"lon": 105.0,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN007",
+"name": "8T",
+"lat": 10.32,
+"lon": 105.02,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN008",
+"name": "9M",
+"lat": 9.56,
+"lon": 105.32,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN009",
+"name": "9T",
+"lat": 10.21,
+"lon": 105.16,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN010",
+"name": "Ba Thê",
+"lat": 10.21751,
+"lon": 105.09638,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN011",
+"name": "Giồng Riềng",
+"lat": 9.90907,
+"lon": 105.32456,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN012",
+"name": "Gò Quao",
+"lat": 9.73,
+"lon": 105.25,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN013",
+"name": "Hà Tiên",
+"lat": 10.38,
+"lon": 104.49,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN014",
+"name": "Hòa Điền",
+"lat": 10.29073,
+"lon": 104.65143,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN015",
+"name": "Rạch Giá",
+"lat": 10.01235,
+"lon": 105.08412,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN016",
+"name": "Tân Hiệp",
+"lat": 10.09652,
+"lon": 105.26403,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN018",
+"name": "Vàm Răng",
+"lat": 10.14,
+"lon": 105.0,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN019",
+"name": "Vàm Rầy",
+"lat": 10.26167,
+"lon": 104.81333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN020",
+"name": "VB6",
+"lat": 9.64066,
+"lon": 105.29672,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN021",
+"name": "VB7",
+"lat": 9.60939,
+"lon": 104.94935,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN022",
+"name": "Vĩnh Điều",
+"lat": 10.52333,
+"lon": 104.70667,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H33.KTTV.MN023",
+"name": "Xẻo Rô",
+"lat": 9.86325,
+"lon": 105.11187,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN001",
+"name": "11G",
+"lat": 10.51,
+"lon": 106.49,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN002",
+"name": "4T",
+"lat": 10.94,
+"lon": 105.72,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN003",
+"name": "Bến Lức",
+"lat": 10.63839,
+"lon": 106.47551,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN004",
+"name": "Mộc Hoá",
+"lat": 10.78103,
+"lon": 105.93288,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN005",
+"name": "Sông Trăng",
+"lat": 10.975,
+"lon": 105.61167,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN006",
+"name": "Tân An",
+"lat": 10.55395,
+"lon": 106.40764,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN007",
+"name": "Tân Hưng",
+"lat": 10.83667,
+"lon": 105.66333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN008",
+"name": "Tân Lập",
+"lat": 10.71167,
+"lon": 106.32333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN009",
+"name": "Tuyên Nhơn",
+"lat": 10.65803,
+"lon": 106.19174,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN010",
+"name": "Vàm Đồn",
+"lat": 11.03167,
+"lon": 105.76667,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H39.KTTV.MN011",
+"name": "Vĩnh Hưng",
+"lat": 10.88833,
+"lon": 105.78167,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN001",
+"name": "4G",
+"lat": 9.7,
+"lon": 105.76,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN002",
+"name": "4M",
+"lat": 9.43,
+"lon": 105.98,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN003",
+"name": "5G",
+"lat": 9.57,
+"lon": 105.6,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN004",
+"name": "Đại Ngãi",
+"lat": 9.7346,
+"lon": 106.07425,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN005",
+"name": "G5",
+"lat": 9.62563,
+"lon": 105.67351,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN006",
+"name": "Mỹ Thanh",
+"lat": 9.41,
+"lon": 106.16,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN007",
+"name": "Trần Đề",
+"lat": 9.42455,
+"lon": 106.17094,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H51.KTTV.MN008",
+"name": "VB2",
+"lat": 9.42781,
+"lon": 105.97436,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H53.KTTV.MN001",
+"name": "Gò Dầu Hạ",
+"lat": 11.07,
+"lon": 106.27,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN001",
+"name": "10G",
+"lat": 10.39,
+"lon": 106.26,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN002",
+"name": "12G",
+"lat": 10.42,
+"lon": 106.59,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN003",
+"name": "6T",
+"lat": 10.58,
+"lon": 106.2,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN004",
+"name": "Cai Lậy",
+"lat": 10.40775,
+"lon": 106.12234,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN005",
+"name": "Hòa Bình",
+"lat": 10.28,
+"lon": 106.58,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN006",
+"name": "Long Định",
+"lat": 10.39884,
+"lon": 106.26019,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN007",
+"name": "Mỹ Tho",
+"lat": 10.34816,
+"lon": 106.34651,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN008",
+"name": "Mỹ Thuận",
+"lat": 10.27508,
+"lon": 105.92625,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H58.KTTV.MN009",
+"name": "Vàm Kênh",
+"lat": 10.27431,
+"lon": 106.73715,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN001",
+"name": "G4",
+"lat": 9.90972,
+"lon": 106.15075,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN002",
+"name": "2M",
+"lat": 9.68,
+"lon": 106.54,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN003",
+"name": "3M",
+"lat": 9.63,
+"lon": 106.38,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN004",
+"name": "7G",
+"lat": 9.91,
+"lon": 106.15,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN005",
+"name": "Cầu Quan",
+"lat": 9.76,
+"lon": 106.11,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN006",
+"name": "Trà Vinh",
+"lat": 9.97535,
+"lon": 106.35406,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H59.KTTV.MN007",
+"name": "VB1",
+"lat": 9.62603,
+"lon": 106.4021,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H61.KTTV.MN001",
+"name": "6G",
+"lat": 10.03,
+"lon": 105.99,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H61.KTTV.MN002",
+"name": "8G",
+"lat": 10.16,
+"lon": 106.17,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H61.KTTV.MN003",
+"name": "Ba Càng",
+"lat": 10.11833,
+"lon": 105.89333,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H61.KTTV.MN004",
+"name": "G2",
+"lat": 10.16162,
+"lon": 106.15947,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+},
+{
+"id": "H61.KTTV.MN005",
+"name": "G3",
+"lat": 10.01886,
+"lon": 105.99082,
+"type": "salinity",
+"subregion": "DBSCL",
+"source": "thuyloi-dwh"
+}
+]

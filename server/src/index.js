@@ -173,6 +173,41 @@ app.get("/api/zones", (req, res) => {
 app.get("/api/stations", (_req, res) =>
   modelGet("/stations").then((d) => ok(res, d)).catch((e) => fail(res, e)));
 
+// Ranh man CHINH THUC (Cuc Thuy loi - GeoServer DWH), de doi chieu voi ranh
+// man mo hinh tu tinh. Proxy + cache (lop nay cap nhat thua). Doi endpoint
+// bang THUYLOI_WFS_URL.
+const THUYLOI_WFS = process.env.THUYLOI_WFS_URL ||
+  "https://gs.vbeta.net/geoserver/dubaonguonnuoc/wfs";
+async function fetchWfs(layer) {
+  const q = new URLSearchParams({
+    service: "WFS", version: "2.0.0", request: "GetFeature",
+    typeNames: layer, outputFormat: "application/json", srsName: "EPSG:4326",
+  });
+  const r = await fetch(`${THUYLOI_WFS}?${q}`, {
+    signal: AbortSignal.timeout(15000), headers: { accept: "application/json" },
+  });
+  if (!r.ok) throw new Error(`geoserver ${r.status}`);
+  return r.json();
+}
+app.get("/api/official/salinity-boundary", async (_req, res) => {
+  try {
+    const out = await cached("official-salt-boundary", async () => {
+      const [dubao, hientrang] = await Promise.all([
+        fetchWfs("dubaonguonnuoc:xnm_ranhmandubao").catch(() => null),
+        fetchWfs("dubaonguonnuoc:xmn_ranhmanhientrang").catch(() => null),
+      ]);
+      const feats = [];
+      for (const [kind, fc] of [["dubao", dubao], ["hientrang", hientrang]]) {
+        for (const f of fc?.features || [])
+          feats.push({ ...f, properties: { ...f.properties, kind } });
+      }
+      return { type: "FeatureCollection", features: feats };
+    }, 3600);
+    if (!out.features.length) return fail(res, "Không lấy được ranh mặn chính thức", 502);
+    ok(res, out);
+  } catch (e) { fail(res, e); }
+});
+
 app.get("/api/scenarios", (_req, res) =>
   modelGet("/scenarios").then((d) => ok(res, d)).catch((e) => fail(res, e)));
 

@@ -60,6 +60,10 @@ button.primary:disabled { background: #45607a; cursor: wait; }
 .metric-row { font-size: 12.5px; margin: 6px 0; }
 .metric-row label { margin-left: 8px; cursor: pointer; }
 .legend-scale { display: flex; justify-content: space-between; color: #90a4b8; }
+.legend-line { display: flex; align-items: center; gap: 6px; margin: 3px 0; color: #b8c7d9; }
+.legend-line .ln { width: 22px; height: 0; flex: none; }
+.legend-line .ln.htr { border-top: 2.5px solid #9c4dcc; }
+.legend-line .ln.dubao { border-top: 2.5px dashed #d81b60; }
 
 #btn-locate {
   width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #1976d2;
@@ -110,13 +114,17 @@ button.primary:disabled { background: #45607a; cursor: wait; }
 .station-wrap { text-align: center; cursor: pointer; }
 .station-marker {
   background: #ffb300; border: 2px solid #fff; border-radius: 50%;
-  width: 14px; height: 14px; margin: 0 auto;
+  width: 11px; height: 11px; margin: 0 auto;
   box-shadow: 0 1px 3px rgba(0,0,0,.5);
 }
+/* 115+ tram: an nhan mac dinh, chi hien khi ro chuot (tranh roi ban do) */
 .station-label {
   font-size: 10px; font-weight: 700; color: #7a5600; white-space: nowrap;
   text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+  display: none; position: relative; z-index: 2;
 }
+.station-wrap:hover .station-label { display: block; }
+.station-wrap:hover { z-index: 3; }
 .user-marker { font-size: 26px; line-height: 1; filter: drop-shadow(0 1px 2px #000); }
 
 .maplibregl-popup-content { color: #16283c; font-size: 12.5px; }

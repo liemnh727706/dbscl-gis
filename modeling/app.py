@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 
 from engine.terrain import get_terrain
 from engine.flood import compute_flood, sample_depth, load_latest_meta
-from engine.salinity import compute_salinity, compute_forecast, sample_salinity
+from engine.salinity import (compute_salinity, compute_forecast,
+                             sample_salinity, station_catalog)
 from engine.zones import zonal_stats, LEVELS
 from engine.render import render_png, safe_output_path
 from engine.rivers import STATIONS
@@ -178,7 +179,11 @@ def render(file: str, style: str = "depth"):
 
 @app.get("/stations")
 def stations():
-    return STATIONS
+    # Uu tien danh muc 115 tram do man DBSCL (Cuc Thuy loi); kem cac tram
+    # muc nuoc dau nguon (Tan Chau, Chau Doc...) tu rivers.STATIONS
+    sal = station_catalog()
+    wl = [s for s in STATIONS if s.get("type") in ("water_level", "both")]
+    return sal + wl
 
 
 @app.get("/scenarios")

@@ -547,6 +547,67 @@ function updateZoneVisibility() {
       $("#lyr-salt-zone").checked ? "visible" : "none");
 }
 
+// ---- Ranh man CHINH THUC (Cuc Thuy loi) de doi chieu voi ranh man mo hinh
+let officialBoundaryLoaded = false;
+async function toggleOfficialBoundary(on) {
+  if (!on) {
+    for (const id of ["salt-official-dubao", "salt-official-htr"])
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+    return;
+  }
+  if (!officialBoundaryLoaded) {
+    try {
+      const fc = await (await fetch("/api/official/salinity-boundary")).json();
+      addOfficialLayers(fc);
+    } catch {
+      $("#lyr-salt-official").checked = false;
+      return;
+    }
+  } else {
+    for (const id of ["salt-official-dubao", "salt-official-htr"])
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "visible");
+  }
+}
+
+function addOfficialLayers(fc, tries = 0) {
+  // addSource/addLayer doi hoi style._loaded; style vector nen co the chua
+  // xong khi nguoi dung bat lop -> thu lai (idle hoac lui ~250ms, toi da 40).
+  try {
+    if (map.getSource("salt-official")) {
+      map.getSource("salt-official").setData(fc);
+    } else {
+      map.addSource("salt-official", { type: "geojson", data: fc });
+      // Hien trang: net lien; Du bao: net dut (mau tim/hong tach khoi ranh
+      // man mo hinh - cham do tren song)
+      map.addLayer({
+        id: "salt-official-htr", type: "line", source: "salt-official",
+        filter: ["==", ["get", "kind"], "hientrang"],
+        paint: { "line-color": "#9c4dcc", "line-width": 2.5 },
+      });
+      map.addLayer({
+        id: "salt-official-dubao", type: "line", source: "salt-official",
+        filter: ["==", ["get", "kind"], "dubao"],
+        paint: { "line-color": "#d81b60", "line-width": 2.5,
+          "line-dasharray": [2, 1.5] },
+      });
+      for (const id of ["salt-official-htr", "salt-official-dubao"])
+        map.on("click", id, (e) => {
+          new maplibregl.Popup().setLngLat(e.lngLat)
+            .setHTML(`<b>${e.features[0].properties.ten}</b><br/>` +
+              `<span class="muted">Nguồn: Cục Thủy lợi (CSDL/DWH)</span>`)
+            .addTo(map);
+        });
+    }
+  } catch (e) {
+    if (tries < 40) return setTimeout(() => addOfficialLayers(fc, tries + 1), 250);
+    return; // bo cuoc sau ~10s
+  }
+  officialBoundaryLoaded = true;
+  for (const id of ["salt-official-dubao", "salt-official-htr"])
+    map.setLayoutProperty(id, "visibility",
+      $("#lyr-salt-official").checked ? "visible" : "none");
+}
+
 // ===================== Du bao xam nhap man =====================
 const FC_RIVERS = ["song_hau", "ham_luong", "co_chien", "vam_co", "song_saigon"];
 const FC_COLORS = { song_hau: "#64b5f6", ham_luong: "#f9a825",
@@ -653,17 +714,24 @@ function renderForecastChart() {
 function renderForecastStations() {
   const fc = state.forecast;
   if (!fc?.stations?.length) { $("#fc-stations").innerHTML = ""; return; }
-  const rows = fc.stations.map((st) => {
+  // 115 tram - chi liet ke tram BI ANH HUONG (cham >=1 g/l trong ky), sap
+  // theo do man giam dan (da sap tu server). Tram con lai gom lai 1 dong.
+  const affected = fc.stations.filter((s) => s.first_day_over_1gl);
+  const fresh = fc.stations.length - affected.length;
+  const rows = affected.map((st) => {
     const d4 = st.first_day_over_4gl, d1 = st.first_day_over_1gl;
     const badge = d4
-      ? `<b style="color:#ef6c00">≥4 g/l từ ${formatDate(d4)}</b>`
-      : d1 ? `<b style="color:#f9a825">≥1 g/l từ ${formatDate(d1)}</b>`
-           : `<b style="color:#2e7d32">ngọt trong kỳ dự báo</b>`;
+      ? `<b style="color:#ef6c00">≥4 g/l (mặn cây trồng) từ ${formatDate(d4)}</b>`
+      : `<b style="color:#f9a825">≥1 g/l từ ${formatDate(d1)}</b>`;
+    const s0 = st.salinity_gl_by_day?.[state.fcDay] ?? st.salinity_gl_by_day?.[0];
     return `<div class="fc-station">📍 <b>${st.name}</b> · ${st.river}` +
-           `<br/><span class="muted">cách cửa sông ${st.chainage_km} km — ${badge}</span></div>`;
+           `<br/><span class="muted">cách cửa sông ${st.chainage_km} km` +
+           (s0 != null ? ` · <b>${s0} g/l</b>` : "") + ` — ${badge}</span></div>`;
   });
   $("#fc-stations").innerHTML =
-    `<div class="legend-title">Dự báo tại trạm đo mặn</div>` + rows.join("");
+    `<div class="legend-title">Dự báo tại trạm đo mặn (${affected.length}/${fc.stations.length} trạm bị ảnh hưởng)</div>` +
+    (rows.join("") || `<div class="muted">Không trạm nào nhiễm mặn ≥1 g/l trong kỳ dự báo.</div>`) +
+    (fresh ? `<div class="muted" style="margin-top:6px">Còn ${fresh} trạm giữ nước ngọt.</div>` : "");
 }
 
 // ===================== Tram quan trac =====================
@@ -928,6 +996,8 @@ $("#p-opacity").addEventListener("input", (e) => {
 $("#lyr-flood").addEventListener("change", updateFloodLayer);
 $("#lyr-salt").addEventListener("change", updateSalinityLayers);
 $("#lyr-salt-zone").addEventListener("change", updateZoneVisibility);
+$("#lyr-salt-official").addEventListener("change",
+  (e) => toggleOfficialBoundary(e.target.checked));
 
 // ---- Radar mua RainViewer
 $("#lyr-radar").addEventListener("change", (e) => toggleRadar(e.target.checked));
