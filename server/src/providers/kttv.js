@@ -10,17 +10,24 @@
 //      cam-la-chay; chi cần chỉnh khi nguồn dùng tên trường la.
 //
 // Khong co nguon nao -> tra null, he thong dung mo hinh man synthetic.
+import { fetchThuyloiSalinity } from "./thuyloi.js";
 import { fetchVndmsSalinity } from "./vndms.js";
 
 const KTTV_URL = process.env.KTTV_API_URL;
 const KTTV_KEY = process.env.KTTV_API_KEY;
 
 export async function fetchKttv() {
-  // 1) VNDMS (uu tien - nguon quoc gia, chuan hoa san)
+  // 1) Cuc Thuy loi DWH (GeoServer cong khai) - nguon do man DBSCL chinh
+  //    thuc tot nhat: 115 tram, GeoJSON, khong auth. Co gia tri vao mua kho;
+  //    mua lu tra danh muc tram (salinity_gl=null) -> van dung lam danh muc.
+  const tl = await fetchThuyloiSalinity().catch(() => null);
+  if (tl && tl.measured_count > 0) return { ...tl, source: "kttv:thuyloi-dwh" };
+
+  // 2) VNDMS (neu cau hinh VNDMS_SALINITY_URL)
   const vndms = await fetchVndmsSalinity().catch(() => null);
   if (vndms) return { ...vndms, source: "kttv:vndms" };
 
-  // 2) Nguon KTTV chinh thuc duoc cap quyen
+  // 3) Nguon KTTV chinh thuc duoc cap quyen
   if (!KTTV_URL) return null;
   try {
     const res = await fetch(KTTV_URL, {

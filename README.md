@@ -82,7 +82,8 @@ ngay độ chính xác DEM thật mà không phải tải lại (~430 MB ô gố
 | RainViewer | Ảnh radar mưa tổng hợp (gồm mạng radar KTTV Việt Nam), cập nhật ~10 phút/lần + ngoại suy 30–60′ | ✅ hoạt động, không cần key — lớp phủ động trên bản đồ, có hoạt ảnh theo thời gian |
 | Quy luật mùa (synthetic) | Q thượng nguồn, biên độ triều, chu kỳ triều cường | ✅ luôn hoạt động (nền/fallback) |
 | MRC Mekong | Mực nước sông Mekong (telemetry 15 phút: Tân Châu, Châu Đốc, Cần Thơ, Mỹ Thuận, Kratie…) | ✅ hoạt động, không cần key — hệ số dòng chảy Q suy từ mực nước thực đo; đổi endpoint bằng `MRC_API_URL` |
-| VNDMS (Cục QLĐĐ & PCTT) | Độ mặn trạm quan trắc tự động (nguồn: Cục QL & XDCT thủy lợi, KTTV) | ⚙️ đã có provider + parser GeoJSON (`server/src/providers/vndms.js`); endpoint độ mặn **không công khai** (401 / chỉ hoạt động mùa khô 12–5) → kích hoạt bằng `VNDMS_SALINITY_URL` (+ `VNDMS_TOKEN` nếu cần) |
+| **Cục Thủy lợi — CSDL/DWH** ([thuyloivietnam.gov.vn/dwh](https://thuyloivietnam.gov.vn/dwh)) | **Độ mặn 115 trạm nội đồng ĐBSCL** (GeoServer WFS `dubaonguonnuoc:tramdomnnoidongscl`, mã KTTV thật, trường `mnhientai` = mặn hiện tại) + ranh mặn dự báo/hiện trạng | ✅ **công khai, không cần key**, GeoJSON — provider `server/src/providers/thuyloi.js`; có giá trị mùa khô (12–5), mùa lũ trả danh mục trạm. Đổi endpoint bằng `THUYLOI_WFS_URL` |
+| VNDMS (Cục QLĐĐ & PCTT) | Độ mặn trạm quan trắc tự động | ⚙️ provider + parser GeoJSON (`server/src/providers/vndms.js`); endpoint độ mặn **không công khai** (401 / chỉ mùa khô) → `VNDMS_SALINITY_URL` (+ `VNDMS_TOKEN`) |
 | KTTV Việt Nam | Mực nước + độ mặn trạm đo | ⚙️ nguồn cấp riêng: đặt `KTTV_API_URL`, `KTTV_API_KEY` và chỉnh `parse()` trong `server/src/providers/kttv.js` |
 
 ## Mức cảnh báo
