@@ -1,13 +1,24 @@
-// Adapter du lieu KTTV Viet Nam (Tong cuc Khi tuong Thuy van / Dai KTTV Nam Bo)
-// Khong co API cong khai - cau hinh qua bien moi truong khi co nguon truy cap:
-//   KTTV_API_URL   : endpoint tra JSON
-//   KTTV_API_KEY   : khoa xac thuc (neu can)
-// Dinh dang mong doi (tuy bien lai ham parse() theo nguon thuc te):
-//   [{ station_id, name, lat, lon, water_level_m?, salinity_gl?, time }]
+// Adapter du lieu KTTV / do man tram thuc do cho hieu chinh mo hinh man.
+//
+// Thu tu uu tien nguon:
+//   1. VNDMS (Cuc QLDD & PCTT) - neu dat VNDMS_SALINITY_URL (xem vndms.js).
+//      Day la diem gom tram man tot nhat ca nuoc, cap nhat gan realtime,
+//      hoat dong mua kho (12-5).
+//   2. Nguon KTTV rieng - neu duoc cap: dat KTTV_API_URL (+ KTTV_API_KEY).
+//      Dinh dang mong doi: [{ station_id, name, lat, lon, salinity_gl, time }]
+//
+// Khong co nguon nao -> tra null, he thong dung mo hinh man synthetic.
+import { fetchVndmsSalinity } from "./vndms.js";
+
 const KTTV_URL = process.env.KTTV_API_URL;
 const KTTV_KEY = process.env.KTTV_API_KEY;
 
 export async function fetchKttv() {
+  // 1) VNDMS (uu tien - nguon quoc gia, chuan hoa san)
+  const vndms = await fetchVndmsSalinity().catch(() => null);
+  if (vndms) return { ...vndms, source: "kttv:vndms" };
+
+  // 2) Nguon KTTV rieng duoc cap quyen
   if (!KTTV_URL) return null;
   try {
     const res = await fetch(KTTV_URL, {
@@ -16,13 +27,15 @@ export async function fetchKttv() {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return { source: "kttv", fetched: new Date().toISOString(), stations: parse(data) };
+    const stations = parse(data);
+    if (!stations.length) return null;
+    return { source: "kttv", fetched: new Date().toISOString(), stations };
   } catch {
     return null;
   }
 }
 
 function parse(data) {
-  // TODO: chinh lai theo cau truc JSON thuc te cua nguon KTTV duoc cap
+  // Chinh lai theo cau truc JSON thuc te cua nguon KTTV duoc cap
   return Array.isArray(data) ? data : data.stations || [];
 }
