@@ -284,7 +284,9 @@ function upsertImageLayer(id, url, { opacity, beforeIds }) {
 // la mot bo tile PNG dong: {host}{path}/{size}/{z}/{x}/{y}/{color}/{opts}.png
 const RADAR_API = "https://api.rainviewer.com/public/weather-maps.json";
 const RADAR_COLOR = 4;   // bang mau "Universal Blue" - mua ro tren nen sang
-const RADAR_TILE = 256;
+// 512px cho do net gap doi 256px o cung muc tile (da kiem chung: z7@512
+// ~19 KB du lieu that so voi z7@256 ~6.5 KB)
+const RADAR_TILE = 512;
 
 function radarTileUrl(frame) {
   // smooth=1, snow=1: anh muot va tach tuyet; color 4 = universal blue
@@ -346,12 +348,14 @@ function showRadarFrame(i) {
   } else {
     if (map.getLayer("radar")) map.removeLayer("radar");
     if (src) map.removeSource("radar");
-    // maxzoom=12: radar tong hop chi phan giai ~1 km (~z10-12). Dat maxzoom
-    // de MapLibre KEO GIAN tile z12 khi zoom sau hon, thay vi request tile
-    // z13+ (RainViewer tra PNG rong 0-byte gay loi giai ma anh khi zoom).
+    // maxzoom=7: RainViewer CHI co du lieu tile den z7 (ca 256 lan 512px)
+    // — tu z8 tro len server tra ve ANH co chu "Zoom Level Not Supported"
+    // (da kiem chung tung muc zoom), anh nay hien lap khap ban do khi
+    // phong to. maxzoom=7 bat MapLibre keo gian tile z7 thay vi request
+    // tile sau hon; radar goc ~1 km nen khong mat chi tiet thuc.
     map.addSource("radar", {
       type: "raster", tiles: [url], tileSize: RADAR_TILE,
-      minzoom: 0, maxzoom: 12,
+      minzoom: 0, maxzoom: 7,
     });
     // Radar la lop thoi tiet truc tiep -> dat tren cung (duoi nhan dia danh)
     map.addLayer({
